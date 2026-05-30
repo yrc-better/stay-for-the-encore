@@ -275,6 +275,7 @@ export type Effect =
       workId?: string;
       amount: number;
       qualityAmount?: number;
+      rehearsalAmount?: number;
       sourceRiffId?: string;
       authorship?: Work["authorship"];
       tensionAmount?: number;
@@ -679,6 +680,7 @@ export const SAVE_VERSION = 1;
 - 每个行动结果都有 `feedback`。
 - `EventTrigger.hasDemo` 能识别至少一条 demo 录音，`minRecordings` 能识别录音数量。
 - `advanceWork` 能更新 `authorship`、`tension` 和 `styleTags`。
+- `advanceWork.rehearsalAmount` 能更新目标 `Work.rehearsal`。
 - 存档包含 `version: 1`。
 - `monthly.actionCounts` 会限制休息和休整的完整收益次数，并在新月份重置。
 - 装备的 `recordingQuality` 修正会进入录音质量公式。
