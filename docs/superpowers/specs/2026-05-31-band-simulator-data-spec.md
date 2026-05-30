@@ -128,7 +128,7 @@
 | 行动 | 体力 | 条件 | 主要变化 | 风险与产物 |
 | --- | ---: | --- | --- | --- |
 | 排练 | -25 | 有目标作品时提升作品；无作品时只提升乐队状态 | 默契 `+4`，目标 `Work.rehearsal +15`，舞台 `+1` | 压力 `+3`；无目标作品时 rehearsal 不变 |
-| 团体创作 | -30 | 至少 1 个 Riff 或当前草稿 | 目标 `Work.completion +35`，作品质量 `+4`，默契 `+1` | 无草稿时创建 `completion = 35` 的草稿；可能产生创作权冲突 |
+| 团体创作 | -30 | 至少 1 个 Riff 或当前草稿 | 目标 `Work.completion +35`，已有草稿 `Work.quality +8`，乐队作品质量 `+4`，默契 `+1` | 无草稿时按公式初始化草稿质量；可能产生创作权冲突 |
 | 录音 | -35 | 至少 1 首 `stage = "song"` 且 `rehearsal >= 30`，乐队资金 `>=300` | 乐队资金 `-300`，名声 `+3` | 生成 Demo 或录音成果 |
 | 演出 | -40 | 有演出机会或当前月份主事件允许 | 名声 `+6`，财富 `+300`，粉丝 `+10`，舞台 `+2` | 健康 `-3`，透支时可能演出事故 |
 | 成员谈话 | -12 | 指定目标成员 | 目标关系 `+7`，压力 `-2` | 关系低于 35 时可能先触发冲突 |
@@ -138,16 +138,18 @@
 
 行动次数限制通过 `monthly.actionCounts[actionId]` 记录。`休息` 的 actionId 为 `rest`，每月最多 2 次完整收益；`休整` 的 actionId 为 `band_rest`，每月最多 1 次完整收益。超过次数后仍可点击，但只生成低收益反馈，避免玩家用 0 体力行动无限恢复。
 
+所有恢复体力的效果都以有效体力上限为封顶，即 `100 - monthly.staminaCapPenalty`。健康低于 40 时，休息也不能把体力恢复到 90 以上。
+
 ## 最快出 Demo 路径验算
 
 第一版应保证玩家不透支也能在 4 个月内做出第一份 Demo。下面用默认恢复规则验证核心循环可达。
 
 | 月份 | 行动 | 月末结果 |
 | --- | --- | --- |
-| `2027-05` | 写 Riff `-18`，团体创作 `-30` | 体力 `52`，获得 Riff，创建草稿 `completion = 35` |
-| `2027-06` | 团体创作 `-30` | 月初体力回到 `100`，草稿 `completion = 70` |
-| `2027-07` | 团体创作 `-30`，排练 `-25`，排练 `-25` | 草稿 `completion = 105` 后转为歌曲，`rehearsal = 30`，体力 `20` |
-| `2027-08` | 录音 `-35` | 月初体力回到 `100`，乐队资金从 `1200` 到 `900`，生成第一份 Demo |
+| `2027-05` | 写 Riff `-18`，团体创作 `-30` | 体力 `52`，获得 Riff，创建草稿 `completion = 35`，`quality` 约 `42..56` |
+| `2027-06` | 团体创作 `-30` | 月初体力回到 `100`，草稿 `completion = 70`，`quality +8` |
+| `2027-07` | 团体创作 `-30`，排练 `-25`，排练 `-25` | 草稿 `completion = 105` 后转为歌曲，`quality +8`，`rehearsal = 30`，体力 `20` |
+| `2027-08` | 录音 `-35` | 月初体力回到 `100`，乐队资金从 `1200` 到 `900`，生成第一份 Demo，录音质量约 `43..50` |
 
 这条路径不依赖随机事件，不需要透支，也不消耗玩家个人财富。玩家如果选择透支或获得剧情加成，可以更早完成 Demo；如果分心打工、社交或演出，则 Demo 会延后。
 
@@ -268,7 +270,16 @@ export type Effect =
   | { kind: "flag"; key: string; value: boolean | number | string }
   | { kind: "counter"; key: keyof GameCounters; amount: number }
   | { kind: "addRiff"; riff: Omit<Riff, "id" | "createdAt"> }
-  | { kind: "advanceWork"; workId?: string; amount: number; sourceRiffId?: string }
+  | {
+      kind: "advanceWork";
+      workId?: string;
+      amount: number;
+      qualityAmount?: number;
+      sourceRiffId?: string;
+      authorship?: Work["authorship"];
+      tensionAmount?: number;
+      styleTags?: string[];
+    }
   | { kind: "addRecording"; recording: Omit<Recording, "id" | "createdAt"> }
   | { kind: "addRelease"; release: Omit<Release, "id" | "month"> }
   | { kind: "addHistory"; entry: Omit<HistoryEntry, "id" | "month"> }
@@ -311,6 +322,8 @@ export interface EventTrigger {
   minRelationship?: Partial<Record<CharacterId, number>>;
   hasRiff?: boolean;
   hasCompletedSong?: boolean;
+  hasDemo?: boolean;
+  minRecordings?: number;
   randomWeight?: number;
 }
 
@@ -329,6 +342,8 @@ export interface EventChoice {
 - 关键剧情事件推荐 3 个选项。
 - 选项文本不只写数值收益，要表现角色立场。
 - 隐藏标记统一进入 `flags`，命名采用 `domain.detail`，例如 `songwriting.vocalConflict1`。
+- 演出机会、人脉和合作机会优先用 flags 表达，例如 `career.hasLivehouseOffer`、`network.hasContact`、`contract.hasLabelIntro`。
+- `hasDemo` 表示 `recordings.some(recording => recording.type === "demo")`；`minRecordings` 表示 `recordings.length` 至少达到指定数量。
 
 ## 事件样例
 
@@ -494,10 +509,13 @@ export interface HistoryEntry {
 
 - `写 Riff` 新增 `Riff`，默认质量为 `18..32`，受创作、装备和风格事件影响。
 - `团体创作` 可用 Riff 创建 `SongDraft`，初始 `completion = 35`；若已有草稿，则推进 `completion +35`。
+- 创建草稿时，`Work.quality = clamp(avg(sourceRiff.quality) + player.creativity * 0.25 + band.cohesion * 0.10 + equipmentBonus.riffQuality, 0, 100)`。
+- 推进已有草稿时，`Work.quality +8`，并限制在 `0..100`。
 - 草稿 `completion >= 100` 时变为 `Song`，`completion` 封顶为 `100`。
 - `排练` 提升目标 `Work.rehearsal +15`。排练可作用于 `draft` 或 `song`，草稿转为歌曲时保留 rehearsal。
 - `录音` 要求至少一首 `Song`，且 `rehearsal >= 30`。
-- 第一版中 `录音` 默认生成 `demo`；若有合约或资金高于阈值，才生成 `single`。
+- 第一版中 `录音` 默认生成 `demo` 类型的 `Recording`，`released = false`。若有合约或未来扩展的发行事件，才会生成 `Release` 或 `single`。
+- 第一版自然流程不产出 `Release`；`addRelease` 仅用于结局预览、测试注入和后续发行系统。依赖 `totalSales` 的称号在 v1 自然流程中不会自然达成。
 
 录音质量默认公式：
 
@@ -569,6 +587,8 @@ export type EndingWeight =
   | { kind: "counter"; key: keyof GameCounters; weight: number }
   | { kind: "uniqueStyleTags"; weight: number }
   | { kind: "totalSales"; weight: number }
+  | { kind: "recordingQualityMax"; weight: number }
+  | { kind: "releaseCriticalScoreMax"; weight: number }
   | { kind: "historyTag"; tag: string; weight: number }
   | { kind: "flag"; key: string; weight: number };
 ```
@@ -577,6 +597,8 @@ export type EndingWeight =
 
 ```text
 normalizedTotalSales = clamp(totalSales / 1000, 0, 100)
+maxRecordingQuality = max(recordings.quality) or 0 when no recordings
+maxReleaseCriticalScore = max(releases.criticalScore) or 0 when no releases
 
 score =
   sum(playerStat * weight) +
@@ -585,6 +607,8 @@ score =
   sum(counterValue * 10 * weight) +
   uniqueStyleTags.size * 10 * weight +
   normalizedTotalSales * weight +
+  maxRecordingQuality * weight +
+  maxReleaseCriticalScore * weight +
   sum(historyEntriesWithTag * 10 * weight) +
   sum(matchedFlag ? 25 * weight : 0)
 ```
@@ -604,18 +628,18 @@ score =
 
 第一版称号规则：
 
-| 称号 | 必要条件 | 主要权重 | 优先级 |
+| 称号 | 必要条件 | 默认权重 | 优先级 |
 | --- | --- | --- | ---: |
-| 技术宗师 | 技术 `>=80` | 技术、录音质量、专业评价 | 80 |
-| 吉他英雄 | 舞台 `>=80` | 舞台、演出履历、粉丝、名场面 | 80 |
-| 声音塑造者 | 创作 `>=78` | 创作、作品质量、专辑评价、风格标签 | 85 |
-| 乐队灵魂 | 平均成员关系 `>=72` | 关系、默契、和解事件、长期留队 | 75 |
-| 地下传奇 | 口碑 `>=70` 且 `totalSales <= 5000` | 口碑、Livehouse、独立标签、低商业妥协 | 70 |
-| 白金巨星 | `totalSales >= 50000` 或财富 `>=50000` | 销量、财富、奖项、媒体曝光 | 65 |
-| 实验先锋 | `globalStyleTags.size >= 4` | 风格标签、争议作品、转型事件 | 70 |
-| 燃烧的传说 | `overdraftActions >= 6` 或 `healthCrises >= 2` | 透支、冲突、短期巅峰、健康代价 | 95 |
-| 无名匠人 | 名声 `<40` 且技术或创作 `>=65` | 技术、创作、稳定履历、低曝光 | 40 |
-| 失落天才 | 技术、创作或舞台任一 `>=70`，且 `missedOpportunities >= 2` | 高潜力、错过机会、关系破裂、低产出 | 90 |
+| 技术宗师 | 技术 `>=80` | `technique 1.4`，`recordingQualityMax 0.5`，`historyTag:professionalPraise 0.8` | 80 |
+| 吉他英雄 | 舞台 `>=80` | `stage 1.3`，`fans 0.5`，`iconicPerformances 1.0`，`historyTag:livehouse 0.4` | 80 |
+| 声音塑造者 | 创作 `>=78` | `creativity 1.4`，`workQuality 0.7`，`releaseCriticalScoreMax 0.6`，`uniqueStyleTags 0.5` | 85 |
+| 乐队灵魂 | 平均成员关系 `>=72` | `relationshipAverage 1.4`，`cohesion 0.8`，`historyTag:reconciliation 0.8` | 75 |
+| 地下传奇 | 口碑 `>=70` 且 `totalSales <= 5000` | `reputation 1.3`，`historyTag:livehouse 0.8`，`historyTag:indie 0.8`，`contractCompromises -0.4` | 70 |
+| 白金巨星 | `totalSales >= 50000` 或财富 `>=50000` | `totalSales 1.2`，`wealth 0.7`，`historyTag:award 0.8`，`fame 0.7` | 65 |
+| 实验先锋 | `globalStyleTags.size >= 4` | `uniqueStyleTags 1.5`，`historyTag:experimental 0.8`，`releaseCriticalScoreMax 0.4` | 70 |
+| 燃烧的传说 | `overdraftActions >= 6` 或 `healthCrises >= 2` | `overdraftActions 1.0`，`healthCrises 1.2`，`historyTag:conflict 0.7`，`iconicPerformances 0.8` | 95 |
+| 无名匠人 | 名声 `<40` 且技术或创作 `>=65` | `technique 0.8`，`creativity 0.8`，`fame -0.5`，`historyTag:craft 0.7` | 40 |
+| 失落天才 | 技术、创作或舞台任一 `>=70`，且 `missedOpportunities >= 2` | `missedOpportunities 1.2`，`historyTag:missedChance 0.8`，`technique 0.4`，`creativity 0.4`，`stage 0.4` | 90 |
 
 第一版如果自然流程数据不足，结局预览入口可以注入测试状态，但必须走同一套判定函数。
 
@@ -648,10 +672,13 @@ export const SAVE_VERSION = 1;
 - 体力为 `-25` 时继续行动会造成额外压力和健康损失。
 - 写 Riff 会新增一个 `Riff`。
 - 团体创作能创建或推进 `Work`，每次推进 `completion +35`。
+- 新草稿的 `Work.quality` 按 Riff、创作、默契和装备公式初始化；继续团体创作会让 `Work.quality +8`。
 - `completion >= 100` 的草稿会转成完成歌曲。
 - 排练能让目标 `Work.rehearsal +15`。
 - 录音要求完成歌曲和 `rehearsal >= 30`。
 - 每个行动结果都有 `feedback`。
+- `EventTrigger.hasDemo` 能识别至少一条 demo 录音，`minRecordings` 能识别录音数量。
+- `advanceWork` 能更新 `authorship`、`tension` 和 `styleTags`。
 - 存档包含 `version: 1`。
 - `monthly.actionCounts` 会限制休息和休整的完整收益次数，并在新月份重置。
 - 装备的 `recordingQuality` 修正会进入录音质量公式。
