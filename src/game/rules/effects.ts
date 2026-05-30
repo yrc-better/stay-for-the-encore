@@ -57,17 +57,96 @@ export function applyEffects(state: GameState, effects: Effect[]): GameState {
     if (effect.kind === "addRiff") {
       return {
         ...current,
-        riffs: [...current.riffs, { ...effect.riff, id: id("riff", current.riffs.length), createdAt: current.month }]
+        riffs: [
+          ...current.riffs,
+          {
+            ...effect.riff,
+            id: id("riff", current.riffs.length),
+            createdAt: current.month,
+            styleTags: [...effect.riff.styleTags]
+          }
+        ]
       };
     }
     if (effect.kind === "addHistory") {
       return {
         ...current,
-        history: [...current.history, { ...effect.entry, id: id("history", current.history.length), month: current.month }]
+        history: [
+          ...current.history,
+          { ...effect.entry, id: id("history", current.history.length), month: current.month, tags: [...effect.entry.tags] }
+        ]
       };
     }
+    if (effect.kind === "addRecording") {
+      return {
+        ...current,
+        recordings: [
+          ...current.recordings,
+          { ...effect.recording, id: id("recording", current.recordings.length), createdAt: current.month }
+        ]
+      };
+    }
+    if (effect.kind === "addRelease") {
+      return {
+        ...current,
+        releases: [
+          ...current.releases,
+          {
+            ...effect.release,
+            id: id("release", current.releases.length),
+            month: current.month,
+            recordingIds: [...effect.release.recordingIds],
+            awards: [...effect.release.awards]
+          }
+        ]
+      };
+    }
+    if (effect.kind === "advanceWork") {
+      const existing = effect.workId ? current.works.find((work) => work.id === effect.workId) : undefined;
+      if (!existing) {
+        if (!effect.sourceRiffId && effect.amount <= 0) return current;
+        const sourceRiff = current.riffs.find((riff) => riff.id === effect.sourceRiffId) ?? current.riffs[0];
+        const baseQuality = sourceRiff ? sourceRiff.quality : 20;
+        const created: GameState["works"][number] = {
+          id: id("work", current.works.length),
+          title: sourceRiff?.titleSeed ?? "未命名的歌",
+          stage: "draft",
+          sourceRiffIds: sourceRiff ? [sourceRiff.id] : [],
+          completion: clamp(effect.amount, 0, 100),
+          quality: clamp(
+            baseQuality + current.player.creativity * 0.25 + current.band.cohesion * 0.1 + (effect.qualityAmount ?? 0),
+            0,
+            100
+          ),
+          rehearsal: clamp(effect.rehearsalAmount ?? 0, 0, 100),
+          styleTags: [...(effect.styleTags ?? sourceRiff?.styleTags ?? [])],
+          authorship: effect.authorship ?? "shared",
+          tension: Math.max(0, effect.tensionAmount ?? 0)
+        };
+        return { ...current, works: [...current.works, created] };
+      }
+
+      const works = current.works.map((work) => {
+        if (work.id !== existing.id) return work;
+        const completion = clamp(work.completion + effect.amount, 0, 100);
+        return {
+          ...work,
+          completion,
+          stage: completion >= 100 ? ("song" as const) : work.stage,
+          quality: clamp(work.quality + (effect.qualityAmount ?? 8), 0, 100),
+          rehearsal: clamp(work.rehearsal + (effect.rehearsalAmount ?? 0), 0, 100),
+          authorship: effect.authorship ?? work.authorship,
+          tension: clamp(work.tension + (effect.tensionAmount ?? 0), 0, 100),
+          styleTags: Array.from(new Set([...work.styleTags, ...(effect.styleTags ?? [])]))
+        };
+      });
+      return { ...current, works };
+    }
     if (effect.kind === "queueEvent") {
-      return { ...current, queuedEvents: [...current.queuedEvents, effect.eventId] };
+      return {
+        ...current,
+        queuedEvents: [...current.queuedEvents, effect.eventId]
+      };
     }
     return current;
   }, state);
