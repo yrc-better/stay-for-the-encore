@@ -17,8 +17,7 @@ const REQUIRED_STATE_OBJECT_FIELDS = [
   "relationships",
   "monthly",
   "counters",
-  "flags",
-  "equipment"
+  "flags"
 ] as const;
 const REQUIRED_STATE_ARRAY_FIELDS = [
   "riffs",
@@ -47,6 +46,20 @@ function isValidTimestamp(value: unknown): value is string {
   return !Number.isNaN(timestamp.getTime()) && timestamp.toISOString() === value;
 }
 
+function hasStringName(value: unknown): value is { name: string } {
+  return isRecord(value) && typeof value.name === "string";
+}
+
+function isEquipmentShape(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    hasStringName(value.guitar) &&
+    Array.isArray(value.pedals) &&
+    value.pedals.every(hasStringName) &&
+    hasStringName(value.amp)
+  );
+}
+
 function isGameStateShape(value: unknown): value is GameState {
   if (!isRecord(value) || typeof value.month !== "string" || !isValidRoute(value.route)) {
     return false;
@@ -54,6 +67,7 @@ function isGameStateShape(value: unknown): value is GameState {
 
   return (
     REQUIRED_STATE_OBJECT_FIELDS.every((field) => isRecord(value[field])) &&
+    isEquipmentShape(value.equipment) &&
     REQUIRED_STATE_ARRAY_FIELDS.every((field) => Array.isArray(value[field]))
   );
 }

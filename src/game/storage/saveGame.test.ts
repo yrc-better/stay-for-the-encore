@@ -57,6 +57,47 @@ describe("saveGame storage", () => {
     expect(loadSave()).toBeNull();
   });
 
+  it("rejects saves with empty equipment", () => {
+    const payload = validPayload();
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ...payload, state: { ...payload.state, equipment: {} } }));
+
+    expect(loadSave()).toBeNull();
+  });
+
+  it("rejects saves with missing guitar equipment", () => {
+    const payload = validPayload();
+    const { guitar: _guitar, ...equipment } = payload.state.equipment;
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ...payload, state: { ...payload.state, equipment } }));
+
+    expect(loadSave()).toBeNull();
+  });
+
+  it("rejects saves with non-array pedals", () => {
+    const payload = validPayload();
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        ...payload,
+        state: { ...payload.state, equipment: { ...payload.state.equipment, pedals: {} } }
+      })
+    );
+
+    expect(loadSave()).toBeNull();
+  });
+
+  it("rejects saves with a pedal missing a string name", () => {
+    const payload = validPayload();
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        ...payload,
+        state: { ...payload.state, equipment: { ...payload.state.equipment, pedals: [{ name: null }] } }
+      })
+    );
+
+    expect(loadSave()).toBeNull();
+  });
+
   it("rejects saves with malformed timestamps", () => {
     localStorage.setItem(SAVE_KEY, JSON.stringify({ ...validPayload(), createdAt: null }));
 
