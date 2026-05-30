@@ -28,6 +28,7 @@ const REQUIRED_STATE_ARRAY_FIELDS = [
   "history",
   "queuedEvents"
 ] as const;
+const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -38,7 +39,12 @@ function isValidRoute(value: unknown): value is GameState["route"] {
 }
 
 function isValidTimestamp(value: unknown): value is string {
-  return typeof value === "string" && !Number.isNaN(Date.parse(value));
+  if (typeof value !== "string" || !ISO_TIMESTAMP_PATTERN.test(value)) {
+    return false;
+  }
+
+  const timestamp = new Date(value);
+  return !Number.isNaN(timestamp.getTime()) && timestamp.toISOString() === value;
 }
 
 function isGameStateShape(value: unknown): value is GameState {
