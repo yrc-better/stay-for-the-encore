@@ -1,5 +1,5 @@
 import { STAMINA } from "../config/balance";
-import type { Effect, GameState, PlayerStatKey } from "../types";
+import type { BandStatKey, Effect, GameState, PlayerStatKey } from "../types";
 import { clamp } from "./clamp";
 
 function id(prefix: string, count: number): string {
@@ -15,6 +15,13 @@ function clampPlayerStat(state: GameState, key: PlayerStatKey, value: number): n
   return clamp(value, 0, 100);
 }
 
+function clampBandStat(key: BandStatKey, value: number): number {
+  if (key === "cohesion" || key === "workQuality" || key === "reputation") {
+    return clamp(value, 0, 100);
+  }
+  return clamp(value, 0, 100000);
+}
+
 export function applyEffects(state: GameState, effects: Effect[]): GameState {
   return effects.reduce<GameState>((current, effect) => {
     if (effect.kind === "playerStat") {
@@ -27,7 +34,10 @@ export function applyEffects(state: GameState, effects: Effect[]): GameState {
       };
     }
     if (effect.kind === "bandStat") {
-      return { ...current, band: { ...current.band, [effect.key]: clamp(current.band[effect.key] + effect.amount, 0, 100000) } };
+      return {
+        ...current,
+        band: { ...current.band, [effect.key]: clampBandStat(effect.key, current.band[effect.key] + effect.amount) }
+      };
     }
     if (effect.kind === "relationship") {
       return {

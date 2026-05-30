@@ -30,4 +30,20 @@ describe("applyEffects", () => {
     expect(next.history[0].id).toBe("history.1");
     expect(next.history[0].month).toBe("2027-05");
   });
+
+  it("clamps normalized band stats to 100", () => {
+    const state = createInitialState("writer");
+
+    const next = applyEffects(state, [{ kind: "bandStat", key: "cohesion", amount: 1000 }]);
+
+    expect(next.band.cohesion).toBe(100);
+  });
+
+  it("keeps money-like band stats non-negative", () => {
+    const state = createInitialState("writer");
+
+    const next = applyEffects(state, [{ kind: "bandStat", key: "funds", amount: -5000 }]);
+
+    expect(next.band.funds).toBe(0);
+  });
 });
