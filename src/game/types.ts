@@ -155,3 +155,37 @@ export interface ActionResult {
   effects: Effect[];
   feedback: Feedback;
 }
+
+export interface EventTrigger {
+  months?: MonthId[];
+  flagsAll?: string[];
+  flagsNone?: string[];
+  minPlayer?: Partial<Record<PlayerStatKey, number>>;
+  maxPlayer?: Partial<Record<PlayerStatKey, number>>;
+  minBand?: Partial<Record<BandStatKey, number>>;
+  minRelationship?: Partial<Record<CharacterId, number>>;
+  hasRiff?: boolean;
+  hasCompletedSong?: boolean;
+  hasDemo?: boolean;
+  minRecordings?: number;
+  randomWeight?: number;
+}
+
+export interface EventChoice {
+  id: string;
+  label: string;
+  requirements?: EventTrigger;
+  effects: Effect[];
+  feedback: Feedback;
+}
+
+export interface GameEvent {
+  id: string;
+  title: string;
+  tags: string[];
+  priority: number;
+  once: boolean;
+  trigger: EventTrigger;
+  body: string;
+  choices: EventChoice[];
+}
