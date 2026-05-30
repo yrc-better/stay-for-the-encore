@@ -132,7 +132,7 @@ export function applyEffects(state: GameState, effects: Effect[]): GameState {
           rehearsal: clamp(effect.rehearsalAmount ?? 0, 0, 100),
           styleTags: [...(effect.styleTags ?? sourceRiff?.styleTags ?? [])],
           authorship: effect.authorship ?? "shared",
-          tension: Math.max(0, effect.tensionAmount ?? 0)
+          tension: clamp(effect.tensionAmount ?? 0, 0, 100)
         };
         return { ...current, works: [...current.works, created] };
       }

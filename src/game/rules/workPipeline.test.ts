@@ -151,4 +151,15 @@ describe("work pipeline", () => {
     expect(state.works[0].stage).toBe("song");
     expect(state.works[0].completion).toBe(100);
   });
+
+  it("clamps new work tension to 100", () => {
+    let state = createInitialState("writer");
+    state = applyEffects(state, [
+      { kind: "addRiff", riff: { titleSeed: "雨后的失真", quality: 24, styleTags: ["delay"], source: "write_riff" } }
+    ]);
+
+    state = applyEffects(state, [{ kind: "advanceWork", amount: 35, tensionAmount: 150 }]);
+
+    expect(state.works[0].tension).toBe(100);
+  });
 });
