@@ -9,6 +9,9 @@ export interface PerformedAction {
   feedback: Feedback;
 }
 
+const RECORDING_COST = 300;
+const DIMINISHED_RECOVERY_EFFECTS = [{ kind: "playerStat" as const, key: "stamina" as const, amount: 0 }];
+
 function incrementActionCount(state: GameState, actionId: ActionId): GameState {
   return {
     ...state,
@@ -31,10 +34,17 @@ export function performAction(state: GameState, actionId: ActionId): PerformedAc
     if (!target) {
       return { state, feedback: FEEDBACK.noRecordableWork };
     }
+    if (state.band.funds < RECORDING_COST) {
+      return { state, feedback: FEEDBACK.insufficientFunds };
+    }
     dynamicEffects.push({ kind: "addRecording" as const, recording: createRecording(state, target.id) });
   }
   const fullEffects = [{ kind: "playerStat" as const, key: "stamina" as const, amount: -action.staminaCost }, ...dynamicEffects];
-  const effects = actionId === "rest" && count >= 2 ? [{ kind: "playerStat" as const, key: "stamina" as const, amount: 0 }] : fullEffects;
+  const isDiminishedRest = actionId === "rest" && count >= 2;
+  const isDiminishedBandRest = actionId === "band_rest" && count >= 1;
+  const effects = isDiminishedRest || isDiminishedBandRest ? DIMINISHED_RECOVERY_EFFECTS : fullEffects;
   const next = incrementActionCount(applyEffects(state, effects), actionId);
-  return { state: next, feedback: actionId === "rest" && count >= 2 ? FEEDBACK.restDiminished : FEEDBACK[actionId] };
+  if (isDiminishedRest) return { state: next, feedback: FEEDBACK.restDiminished };
+  if (isDiminishedBandRest) return { state: next, feedback: FEEDBACK.bandRestDiminished };
+  return { state: next, feedback: FEEDBACK[actionId] };
 }

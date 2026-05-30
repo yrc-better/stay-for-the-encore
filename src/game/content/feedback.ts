@@ -1,6 +1,9 @@
+import type { ActionId } from "./actions";
 import type { Feedback } from "../types";
 
-export const FEEDBACK: Record<string, Feedback> = {
+type ExtraFeedbackId = "restDiminished" | "bandRestDiminished" | "noRecordableWork" | "insufficientFunds";
+
+export const FEEDBACK: Record<ActionId | ExtraFeedbackId, Feedback> = {
   practice: {
     title: "练到指尖发烫",
     body: "你把同一段过门弹到深夜。它终于不再像借来的句子，而像你自己的声音。"
@@ -69,8 +72,16 @@ export const FEEDBACK: Record<string, Feedback> = {
     title: "乐队休整",
     body: "你们没有排练，也没有争论。只是一起吃了顿饭，像四个普通朋友。"
   },
+  bandRestDiminished: {
+    title: "休整也需要间隔",
+    body: "你们试着再把这当成休息，但每个人都知道真正需要处理的问题还在原地。"
+  },
   noRecordableWork: {
     title: "还录不了",
     body: "现在还没有排练度足够的完整歌曲。录音灯亮起之前，你们还需要把歌弹稳。"
+  },
+  insufficientFunds: {
+    title: "钱还不够",
+    body: "棚费、工程师和来回交通都要现金。歌已经准备好了，但账面还撑不起这次录音。"
   }
 };
