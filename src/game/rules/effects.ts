@@ -22,6 +22,16 @@ function clampBandStat(key: BandStatKey, value: number): number {
   return clamp(value, 0, 100000);
 }
 
+type AdvanceWorkEffect = Extract<Effect, { kind: "advanceWork" }>;
+type WorkState = GameState["works"][number];
+
+function selectAdvanceWorkTarget(state: GameState, effect: AdvanceWorkEffect): WorkState | undefined {
+  if (effect.workId) return state.works.find((work) => work.id === effect.workId);
+  if (effect.amount > 0) return state.works.find((work) => work.stage === "draft" && work.completion < 100);
+  if ((effect.rehearsalAmount ?? 0) > 0) return state.works.find((work) => work.stage === "song") ?? state.works[0];
+  return undefined;
+}
+
 export function applyEffects(state: GameState, effects: Effect[]): GameState {
   return effects.reduce<GameState>((current, effect) => {
     if (effect.kind === "playerStat") {
@@ -102,17 +112,18 @@ export function applyEffects(state: GameState, effects: Effect[]): GameState {
       };
     }
     if (effect.kind === "advanceWork") {
-      const existing = effect.workId ? current.works.find((work) => work.id === effect.workId) : undefined;
+      const existing = selectAdvanceWorkTarget(current, effect);
       if (!existing) {
-        if (!effect.sourceRiffId && effect.amount <= 0) return current;
+        if (effect.workId || effect.amount <= 0) return current;
         const sourceRiff = current.riffs.find((riff) => riff.id === effect.sourceRiffId) ?? current.riffs[0];
         const baseQuality = sourceRiff ? sourceRiff.quality : 20;
-        const created: GameState["works"][number] = {
+        const completion = clamp(effect.amount, 0, 100);
+        const created: WorkState = {
           id: id("work", current.works.length),
           title: sourceRiff?.titleSeed ?? "未命名的歌",
-          stage: "draft",
+          stage: completion >= 100 ? "song" : "draft",
           sourceRiffIds: sourceRiff ? [sourceRiff.id] : [],
-          completion: clamp(effect.amount, 0, 100),
+          completion,
           quality: clamp(
             baseQuality + current.player.creativity * 0.25 + current.band.cohesion * 0.1 + (effect.qualityAmount ?? 0),
             0,

@@ -69,4 +69,86 @@ describe("work pipeline", () => {
 
     expect(state.works[0].rehearsal).toBe(15);
   });
+
+  it("advances the same draft when advanceWork has no workId", () => {
+    let state = createInitialState("writer");
+    state = applyEffects(state, [
+      { kind: "addRiff", riff: { titleSeed: "雨后的失真", quality: 24, styleTags: ["delay"], source: "write_riff" } }
+    ]);
+
+    state = applyEffects(state, [{ kind: "advanceWork", amount: 35, qualityAmount: 8, authorship: "shared" }]);
+    state = applyEffects(state, [{ kind: "advanceWork", amount: 35, qualityAmount: 8, authorship: "shared" }]);
+
+    expect(state.works).toHaveLength(1);
+    expect(state.works[0].completion).toBe(70);
+  });
+
+  it("increases rehearsal on an existing work when advanceWork has no workId", () => {
+    let state = createInitialState("writer");
+    state.works.push(
+      {
+        id: "work.1",
+        title: "排练室草稿",
+        stage: "draft",
+        sourceRiffIds: ["riff.1"],
+        completion: 55,
+        quality: 46,
+        rehearsal: 0,
+        styleTags: ["delay"],
+        authorship: "shared",
+        tension: 0
+      },
+      {
+        id: "work.2",
+        title: "雨后的失真",
+        stage: "song",
+        sourceRiffIds: ["riff.2"],
+        completion: 100,
+        quality: 58,
+        rehearsal: 10,
+        styleTags: ["delay"],
+        authorship: "shared",
+        tension: 0
+      }
+    );
+
+    state = applyEffects(state, [{ kind: "advanceWork", amount: 0, rehearsalAmount: 15 }]);
+
+    expect(state.works[0].rehearsal).toBe(0);
+    expect(state.works[1].rehearsal).toBe(25);
+  });
+
+  it("does not create a work for an unknown explicit workId", () => {
+    let state = createInitialState("writer");
+    state.works.push({
+      id: "work.1",
+      title: "雨后的失真",
+      stage: "draft",
+      sourceRiffIds: ["riff.1"],
+      completion: 35,
+      quality: 58,
+      rehearsal: 0,
+      styleTags: ["delay"],
+      authorship: "shared",
+      tension: 0
+    });
+
+    state = applyEffects(state, [{ kind: "advanceWork", workId: "work.missing", amount: 65, rehearsalAmount: 15 }]);
+
+    expect(state.works).toHaveLength(1);
+    expect(state.works[0].completion).toBe(35);
+    expect(state.works[0].rehearsal).toBe(0);
+  });
+
+  it("creates a song when initial advanceWork completion reaches 100", () => {
+    let state = createInitialState("writer");
+    state = applyEffects(state, [
+      { kind: "addRiff", riff: { titleSeed: "雨后的失真", quality: 24, styleTags: ["delay"], source: "write_riff" } }
+    ]);
+
+    state = applyEffects(state, [{ kind: "advanceWork", amount: 120, qualityAmount: 8 }]);
+
+    expect(state.works[0].stage).toBe("song");
+    expect(state.works[0].completion).toBe(100);
+  });
 });
