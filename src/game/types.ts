@@ -120,3 +120,38 @@ export interface GameState {
   history: HistoryEntry[];
   queuedEvents: string[];
 }
+
+export type Effect =
+  | { kind: "playerStat"; key: PlayerStatKey; amount: number }
+  | { kind: "bandStat"; key: BandStatKey; amount: number }
+  | { kind: "relationship"; character: CharacterId; amount: number }
+  | { kind: "flag"; key: string; value: boolean | number | string }
+  | { kind: "counter"; key: keyof GameCounters; amount: number }
+  | { kind: "addRiff"; riff: Omit<Riff, "id" | "createdAt"> }
+  | {
+      kind: "advanceWork";
+      workId?: string;
+      amount: number;
+      qualityAmount?: number;
+      rehearsalAmount?: number;
+      sourceRiffId?: string;
+      authorship?: Work["authorship"];
+      tensionAmount?: number;
+      styleTags?: string[];
+    }
+  | { kind: "addRecording"; recording: Omit<Recording, "id" | "createdAt"> }
+  | { kind: "addRelease"; release: Omit<Release, "id" | "month"> }
+  | { kind: "addHistory"; entry: Omit<HistoryEntry, "id" | "month"> }
+  | { kind: "queueEvent"; eventId: string };
+
+export interface Feedback {
+  title: string;
+  body: string;
+  memberReactions?: Partial<Record<CharacterId, string>>;
+  followUpEventId?: string;
+}
+
+export interface ActionResult {
+  effects: Effect[];
+  feedback: Feedback;
+}
