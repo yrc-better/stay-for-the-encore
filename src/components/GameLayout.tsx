@@ -1,16 +1,20 @@
 import type { ActionId } from "../game/content/actions";
-import type { GameState } from "../game/types";
+import type { GameEvent, GameState } from "../game/types";
 import { ActionPanel } from "./ActionPanel";
 
 export function GameLayout({
   state,
+  activeEvent,
   onAction,
+  onEventChoice,
   onNextMonth,
   onEnding,
   onReset
 }: {
   state: GameState;
+  activeEvent: GameEvent | null;
   onAction: (action: ActionId) => void;
+  onEventChoice: (choiceId: string) => void;
   onNextMonth: () => void;
   onEnding: () => void;
   onReset: () => void;
@@ -31,7 +35,21 @@ export function GameLayout({
       </aside>
       <main className="main-panel">
         <h2>当前事件</h2>
-        <p>毕业演出前的一个月，排练室里的每一次沉默都变得很响。</p>
+        {activeEvent ? (
+          <section className="event-panel">
+            <h3>{activeEvent.title}</h3>
+            <p>{activeEvent.body}</p>
+            <div className="event-choices">
+              {activeEvent.choices.map((choice) => (
+                <button key={choice.id} onClick={() => onEventChoice(choice.id)}>
+                  {choice.label}
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : (
+          <p>这个月暂时没有新的事件。</p>
+        )}
         <ActionPanel onAction={onAction} />
         <div className="toolbar">
           <button onClick={onNextMonth}>进入下个月</button>

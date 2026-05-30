@@ -124,6 +124,25 @@ button:hover {
   font-weight: 700;
 }
 
+.event-panel {
+  margin-bottom: 18px;
+}
+
+.event-panel h3 {
+  margin: 0 0 8px;
+}
+
+.event-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.event-choices button {
+  border-color: #c6a15b;
+}
+
 .action-group {
   display: grid;
   align-content: start;
@@ -201,6 +220,7 @@ button:hover {
   }
 
   .toolbar button,
+  .event-choices button,
   .action-group button {
     width: 100%;
   }

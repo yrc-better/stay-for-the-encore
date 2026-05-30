@@ -15,7 +15,9 @@ export default function App() {
     <main className="app-shell">
       <GameLayout
         state={controller.state}
+        activeEvent={controller.activeEvent}
         onAction={controller.act}
+        onEventChoice={controller.chooseEvent}
         onNextMonth={controller.nextMonth}
         onEnding={() => controller.showEnding("preview")}
         onReset={controller.reset}

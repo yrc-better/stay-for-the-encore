@@ -57,6 +57,34 @@ describe("saveGame storage", () => {
     expect(loadSave()).toBeNull();
   });
 
+  it("rejects saves with missing monthly counters", () => {
+    const payload = validPayload();
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ...payload, state: { ...payload.state, monthly: {} } }));
+
+    expect(loadSave()).toBeNull();
+  });
+
+  it("rejects saves with null history entries", () => {
+    const payload = validPayload();
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ...payload, state: { ...payload.state, history: [null] } }));
+
+    expect(loadSave()).toBeNull();
+  });
+
+  it("rejects saves with null works", () => {
+    const payload = validPayload();
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ...payload, state: { ...payload.state, works: [null] } }));
+
+    expect(loadSave()).toBeNull();
+  });
+
+  it("rejects saves with null queued events", () => {
+    const payload = validPayload();
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ...payload, state: { ...payload.state, queuedEvents: [null] } }));
+
+    expect(loadSave()).toBeNull();
+  });
+
   it("rejects saves with empty equipment", () => {
     const payload = validPayload();
     localStorage.setItem(SAVE_KEY, JSON.stringify({ ...payload, state: { ...payload.state, equipment: {} } }));
