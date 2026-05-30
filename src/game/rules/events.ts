@@ -1,10 +1,14 @@
 import { EVENTS } from "../content/events";
 import type { EventTrigger, GameEvent, GameState } from "../types";
 
+function hasFlag(state: GameState, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(state.flags, key);
+}
+
 export function triggerMatches(state: GameState, trigger: EventTrigger): boolean {
   if (trigger.months && !trigger.months.includes(state.month)) return false;
-  if (trigger.flagsAll?.some((flag) => !state.flags[flag])) return false;
-  if (trigger.flagsNone?.some((flag) => state.flags[flag])) return false;
+  if (trigger.flagsAll?.some((flag) => !hasFlag(state, flag))) return false;
+  if (trigger.flagsNone?.some((flag) => hasFlag(state, flag))) return false;
   if (trigger.hasRiff && state.riffs.length === 0) return false;
   if (trigger.hasCompletedSong && !state.works.some((work) => work.stage === "song")) return false;
   if (trigger.hasDemo && !state.recordings.some((recording) => recording.type === "demo")) return false;
