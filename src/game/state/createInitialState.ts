@@ -1,6 +1,14 @@
 import { BAND_INITIAL_STATS, PLAYER_INITIAL_STATS, RELATIONSHIP_INITIAL_STATS } from "../config/balance";
 import { DEFAULT_EQUIPMENT } from "../config/equipment";
-import type { GameState, RouteId } from "../types";
+import type { EquipmentItem, GameState, RouteId } from "../types";
+
+function cloneEquipmentItem(item: EquipmentItem): EquipmentItem {
+  return {
+    ...item,
+    tags: [...item.tags],
+    modifiers: item.modifiers ? { ...item.modifiers } : undefined
+  };
+}
 
 export function createInitialState(route: RouteId): GameState {
   return {
@@ -10,9 +18,9 @@ export function createInitialState(route: RouteId): GameState {
     band: { ...BAND_INITIAL_STATS },
     relationships: { ...RELATIONSHIP_INITIAL_STATS[route] },
     equipment: {
-      guitar: { ...DEFAULT_EQUIPMENT.guitar },
-      pedals: DEFAULT_EQUIPMENT.pedals.map((pedal) => ({ ...pedal })),
-      amp: { ...DEFAULT_EQUIPMENT.amp }
+      guitar: cloneEquipmentItem(DEFAULT_EQUIPMENT.guitar),
+      pedals: DEFAULT_EQUIPMENT.pedals.map(cloneEquipmentItem),
+      amp: cloneEquipmentItem(DEFAULT_EQUIPMENT.amp)
     },
     monthly: { actionCounts: {}, staminaCapPenalty: 0, riskEventsThisMonth: 0 },
     counters: {

@@ -16,4 +16,20 @@ describe("createInitialState", () => {
     expect(state.counters.overdraftActions).toBe(0);
     expect(state.equipment.guitar.name).toBe("二手 Jazzmaster");
   });
+
+  it("creates independent equipment tags and modifiers for each state", () => {
+    const state = createInitialState("writer");
+
+    state.equipment.guitar.tags.push("mutated");
+    state.equipment.guitar.modifiers!.riffQuality = 99;
+    state.equipment.pedals[0].tags.push("mutated-pedal");
+    state.equipment.pedals[0].modifiers!.performanceStability = 99;
+
+    const nextState = createInitialState("writer");
+
+    expect(nextState.equipment.guitar.tags).toEqual(["noise", "alternative", "offset"]);
+    expect(nextState.equipment.guitar.modifiers?.riffQuality).toBe(2);
+    expect(nextState.equipment.pedals[0].tags).toEqual(["drive"]);
+    expect(nextState.equipment.pedals[0].modifiers?.performanceStability).toBe(1);
+  });
 });
