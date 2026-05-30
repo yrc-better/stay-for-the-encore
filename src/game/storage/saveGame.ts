@@ -37,6 +37,10 @@ function isValidRoute(value: unknown): value is GameState["route"] {
   return typeof value === "string" && VALID_ROUTES.includes(value as GameState["route"]);
 }
 
+function isValidTimestamp(value: unknown): value is string {
+  return typeof value === "string" && !Number.isNaN(Date.parse(value));
+}
+
 function isGameStateShape(value: unknown): value is GameState {
   if (!isRecord(value) || typeof value.month !== "string" || !isValidRoute(value.route)) {
     return false;
@@ -52,8 +56,8 @@ function isSaveGame(value: unknown): value is SaveGame {
   return (
     isRecord(value) &&
     value.version === SAVE_VERSION &&
-    typeof value.createdAt === "string" &&
-    typeof value.updatedAt === "string" &&
+    isValidTimestamp(value.createdAt) &&
+    isValidTimestamp(value.updatedAt) &&
     isGameStateShape(value.state)
   );
 }

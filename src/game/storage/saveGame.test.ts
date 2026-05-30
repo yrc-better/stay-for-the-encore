@@ -62,6 +62,18 @@ describe("saveGame storage", () => {
     expect(loadSave()).toBeNull();
   });
 
+  it("rejects saves with invalid createdAt timestamp strings", () => {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ...validPayload(), createdAt: "not-a-date" }));
+
+    expect(loadSave()).toBeNull();
+  });
+
+  it("rejects saves with invalid updatedAt timestamp strings", () => {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ...validPayload(), updatedAt: "not-a-date" }));
+
+    expect(loadSave()).toBeNull();
+  });
+
   it("preserves createdAt across saves", () => {
     saveGame(createInitialState("writer"));
     const first = loadSave();
