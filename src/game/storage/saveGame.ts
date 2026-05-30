@@ -10,6 +10,54 @@ export interface SaveGame {
   state: GameState;
 }
 
+const VALID_ROUTES: GameState["route"][] = ["technician", "writer", "performer", "rebel"];
+const REQUIRED_STATE_OBJECT_FIELDS = [
+  "player",
+  "band",
+  "relationships",
+  "monthly",
+  "counters",
+  "flags",
+  "equipment"
+] as const;
+const REQUIRED_STATE_ARRAY_FIELDS = [
+  "riffs",
+  "works",
+  "recordings",
+  "releases",
+  "history",
+  "queuedEvents"
+] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isValidRoute(value: unknown): value is GameState["route"] {
+  return typeof value === "string" && VALID_ROUTES.includes(value as GameState["route"]);
+}
+
+function isGameStateShape(value: unknown): value is GameState {
+  if (!isRecord(value) || typeof value.month !== "string" || !isValidRoute(value.route)) {
+    return false;
+  }
+
+  return (
+    REQUIRED_STATE_OBJECT_FIELDS.every((field) => isRecord(value[field])) &&
+    REQUIRED_STATE_ARRAY_FIELDS.every((field) => Array.isArray(value[field]))
+  );
+}
+
+function isSaveGame(value: unknown): value is SaveGame {
+  return (
+    isRecord(value) &&
+    value.version === SAVE_VERSION &&
+    typeof value.createdAt === "string" &&
+    typeof value.updatedAt === "string" &&
+    isGameStateShape(value.state)
+  );
+}
+
 export function saveGame(state: GameState): void {
   const existing = loadSave();
   const now = new Date().toISOString();
@@ -26,9 +74,9 @@ export function loadSave(): SaveGame | null {
   const raw = localStorage.getItem(SAVE_KEY);
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(raw) as Partial<SaveGame>;
-    if (parsed.version !== SAVE_VERSION || !parsed.state) return null;
-    return parsed as SaveGame;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isSaveGame(parsed)) return null;
+    return parsed;
   } catch {
     return null;
   }
