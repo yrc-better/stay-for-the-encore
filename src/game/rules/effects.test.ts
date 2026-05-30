@@ -25,7 +25,9 @@ describe("applyEffects", () => {
     ]);
 
     expect(next.riffs).toHaveLength(1);
+    expect(next.riffs[0].id).toBe("riff.1");
     expect(next.riffs[0].createdAt).toBe("2027-05");
+    expect(next.history[0].id).toBe("history.1");
     expect(next.history[0].month).toBe("2027-05");
   });
 });
