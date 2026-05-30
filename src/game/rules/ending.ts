@@ -6,6 +6,7 @@ import {
   type EndingWeight
 } from "../config/endingRules";
 import type { GameState } from "../types";
+import { clamp } from "./clamp";
 
 export interface EndingResult {
   trigger: EndingTrigger;
@@ -31,22 +32,35 @@ function historyTagCount(state: GameState, tag: string): number {
   return state.history.filter((entry) => entry.tags.includes(tag)).length;
 }
 
+function assertNever(value: never): never {
+  throw new Error(`Unhandled ending rule variant: ${JSON.stringify(value)}`);
+}
+
 function requirementMet(state: GameState, requirement: EndingRequirement): boolean {
-  if (requirement.kind === "playerMin") return state.player[requirement.key] >= requirement.value;
-  if (requirement.kind === "playerMax") return state.player[requirement.key] <= requirement.value;
-  if (requirement.kind === "anyPlayerMin") {
-    return requirement.keys.some((key) => state.player[key] >= requirement.value);
+  switch (requirement.kind) {
+    case "playerMin":
+      return state.player[requirement.key] >= requirement.value;
+    case "playerMax":
+      return state.player[requirement.key] <= requirement.value;
+    case "anyPlayerMin":
+      return requirement.keys.some((key) => state.player[key] >= requirement.value);
+    case "bandMin":
+      return state.band[requirement.key] >= requirement.value;
+    case "relationshipAvgMin":
+      return average(Object.values(state.relationships)) >= requirement.value;
+    case "counterMin":
+      return state.counters[requirement.key] >= requirement.value;
+    case "uniqueStyleTagsMin":
+      return uniqueStyleTags(state) >= requirement.value;
+    case "totalSalesMin":
+      return totalSales(state) >= requirement.value;
+    case "totalSalesMax":
+      return totalSales(state) <= requirement.value;
+    case "historyTagMin":
+      return historyTagCount(state, requirement.tag) >= requirement.count;
+    default:
+      return assertNever(requirement);
   }
-  if (requirement.kind === "bandMin") return state.band[requirement.key] >= requirement.value;
-  if (requirement.kind === "relationshipAvgMin") {
-    return average(Object.values(state.relationships)) >= requirement.value;
-  }
-  if (requirement.kind === "counterMin") return state.counters[requirement.key] >= requirement.value;
-  if (requirement.kind === "uniqueStyleTagsMin") return uniqueStyleTags(state) >= requirement.value;
-  if (requirement.kind === "totalSalesMin") return totalSales(state) >= requirement.value;
-  if (requirement.kind === "totalSalesMax") return totalSales(state) <= requirement.value;
-  if (requirement.kind === "historyTagMin") return historyTagCount(state, requirement.tag) >= requirement.count;
-  return false;
 }
 
 function ruleEligible(state: GameState, rule: EndingTitleRule): boolean {
@@ -58,20 +72,28 @@ function ruleEligible(state: GameState, rule: EndingTitleRule): boolean {
 }
 
 function weightScore(state: GameState, weight: EndingWeight): number {
-  if (weight.kind === "player") return state.player[weight.key] * weight.weight;
-  if (weight.kind === "band") return state.band[weight.key] * weight.weight;
-  if (weight.kind === "relationshipAverage") return average(Object.values(state.relationships)) * weight.weight;
-  if (weight.kind === "counter") return state.counters[weight.key] * 10 * weight.weight;
-  if (weight.kind === "uniqueStyleTags") return uniqueStyleTags(state) * 10 * weight.weight;
-  if (weight.kind === "totalSales") return Math.min(totalSales(state) / 1000, 100) * weight.weight;
-  if (weight.kind === "recordingQualityMax") {
-    return Math.max(0, ...state.recordings.map((recording) => recording.quality)) * weight.weight;
+  switch (weight.kind) {
+    case "player":
+      return state.player[weight.key] * weight.weight;
+    case "band":
+      return state.band[weight.key] * weight.weight;
+    case "relationshipAverage":
+      return average(Object.values(state.relationships)) * weight.weight;
+    case "counter":
+      return state.counters[weight.key] * 10 * weight.weight;
+    case "uniqueStyleTags":
+      return uniqueStyleTags(state) * 10 * weight.weight;
+    case "totalSales":
+      return clamp(totalSales(state) / 1000, 0, 100) * weight.weight;
+    case "recordingQualityMax":
+      return Math.max(0, ...state.recordings.map((recording) => recording.quality)) * weight.weight;
+    case "releaseCriticalScoreMax":
+      return Math.max(0, ...state.releases.map((release) => release.criticalScore)) * weight.weight;
+    case "historyTag":
+      return historyTagCount(state, weight.tag) * 10 * weight.weight;
+    default:
+      return assertNever(weight);
   }
-  if (weight.kind === "releaseCriticalScoreMax") {
-    return Math.max(0, ...state.releases.map((release) => release.criticalScore)) * weight.weight;
-  }
-  if (weight.kind === "historyTag") return historyTagCount(state, weight.tag) * 10 * weight.weight;
-  return 0;
 }
 
 export function evaluateEnding(state: GameState, trigger: EndingTrigger): EndingResult {
@@ -82,7 +104,17 @@ export function evaluateEnding(state: GameState, trigger: EndingTrigger): Ending
     }))
     .sort((a, b) => b.score - a.score || b.rule.priority - a.rule.priority);
 
-  const winner = ranked[0] ?? { rule: ENDING_RULES[0], score: 0 };
+  const winner = ranked[0];
+  if (!winner) {
+    return {
+      trigger,
+      titleId: "early_career",
+      titleLabel: "未定之路",
+      score: 0,
+      summary: "这一段乐队人生还没有沉淀出明确的称号。"
+    };
+  }
+
   return {
     trigger,
     titleId: winner.rule.id,
