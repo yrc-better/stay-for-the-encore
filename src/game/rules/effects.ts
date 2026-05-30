@@ -144,7 +144,7 @@ export function applyEffects(state: GameState, effects: Effect[]): GameState {
           ...work,
           completion,
           stage: completion >= 100 ? ("song" as const) : work.stage,
-          quality: clamp(work.quality + (effect.qualityAmount ?? 8), 0, 100),
+          quality: clamp(work.quality + (effect.qualityAmount ?? (effect.amount > 0 ? 8 : 0)), 0, 100),
           rehearsal: clamp(work.rehearsal + (effect.rehearsalAmount ?? 0), 0, 100),
           authorship: effect.authorship ?? work.authorship,
           tension: clamp(work.tension + (effect.tensionAmount ?? 0), 0, 100),

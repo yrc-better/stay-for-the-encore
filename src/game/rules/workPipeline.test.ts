@@ -116,6 +116,7 @@ describe("work pipeline", () => {
 
     expect(state.works[0].rehearsal).toBe(0);
     expect(state.works[1].rehearsal).toBe(25);
+    expect(state.works[1].quality).toBe(58);
   });
 
   it("does not create a work for an unknown explicit workId", () => {
