@@ -66,4 +66,18 @@ describe("App", () => {
 
     expect(screen.getByRole("button", { name: /创作型/ })).toBeInTheDocument();
   });
+
+  it("renders responsive gameplay regions for desktop and mobile layouts", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: /创作型/ }));
+
+    expect(screen.getByRole("region", { name: "状态摘要" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "当前事件" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "行动选择" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "装备" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "成员关系" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "履历" })).toBeInTheDocument();
+  });
 });
