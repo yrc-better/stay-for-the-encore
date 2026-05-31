@@ -109,6 +109,10 @@ At `max-width: 1099px`, switch to two columns:
       "relationships actions"
       "history actions";
   }
+
+  .action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 ```
 
@@ -124,10 +128,13 @@ At `max-width: 759px`, switch to one column:
       "summary"
       "event"
       "actions"
-      "toolbar"
       "equipment"
       "relationships"
       "history";
+  }
+
+  .action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 ```
