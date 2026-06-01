@@ -19,7 +19,6 @@ export default function App() {
         onAction={controller.act}
         onEventChoice={controller.chooseEvent}
         onNextMonth={controller.nextMonth}
-        onEnding={() => controller.showEnding("preview")}
         onReset={controller.reset}
       />
       {controller.feedback && <FeedbackModal feedback={controller.feedback} onClose={controller.closeFeedback} />}

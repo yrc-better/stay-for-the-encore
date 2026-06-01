@@ -8,7 +8,6 @@ export function GameLayout({
   onAction,
   onEventChoice,
   onNextMonth,
-  onEnding,
   onReset
 }: {
   state: GameState;
@@ -16,7 +15,6 @@ export function GameLayout({
   onAction: (action: ActionId) => void;
   onEventChoice: (choiceId: string) => void;
   onNextMonth: () => void;
-  onEnding: () => void;
   onReset: () => void;
 }) {
   return (
@@ -55,7 +53,6 @@ export function GameLayout({
         <ActionPanel onAction={onAction} />
         <div className="toolbar">
           <button onClick={onNextMonth}>进入下个月</button>
-          <button onClick={onEnding}>结局预览</button>
           <button onClick={onReset}>重开</button>
         </div>
       </section>

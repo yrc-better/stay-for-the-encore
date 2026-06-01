@@ -49,17 +49,13 @@ describe("App", () => {
     expect(screen.queryByText("毕业演出前的一个月，排练室里的每一次沉默都变得很响。")).not.toBeInTheDocument();
   });
 
-  it("can open ending preview without showing title tendency in main UI", async () => {
+  it("does not expose ending preview in the main UI", async () => {
     const user = userEvent.setup();
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: /创作型/ }));
     expect(screen.queryByText("称号倾向")).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "结局预览" }));
-    expect(
-      screen.getByText(/你以「|这一段乐队人生还没有沉淀出明确的称号。/)
-    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "结局预览" })).not.toBeInTheDocument();
   });
 
   it("falls back to route selection when saved equipment cannot render", () => {
