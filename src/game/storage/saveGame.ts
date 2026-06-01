@@ -1,4 +1,5 @@
 import type { GameState } from "../types";
+import { normalizeBandName } from "../config/defaults";
 
 export const SAVE_VERSION = 1;
 export const SAVE_KEY = "band-simulator-save";
@@ -193,6 +194,10 @@ function isGameStateShape(value: unknown): value is GameState {
     return false;
   }
 
+  if ("bandName" in value && typeof value.bandName !== "string") {
+    return false;
+  }
+
   if (!REQUIRED_STATE_ARRAY_FIELDS.every((field) => Array.isArray(value[field]))) {
     return false;
   }
@@ -232,6 +237,13 @@ function isSaveGame(value: unknown): value is SaveGame {
   );
 }
 
+function normalizeLoadedState(state: GameState): GameState {
+  return {
+    ...state,
+    bandName: normalizeBandName(state.bandName)
+  };
+}
+
 export function saveGame(state: GameState): void {
   const existing = loadSave();
   const now = new Date().toISOString();
@@ -250,7 +262,7 @@ export function loadSave(): SaveGame | null {
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (!isSaveGame(parsed)) return null;
-    return parsed;
+    return { ...parsed, state: normalizeLoadedState(parsed.state) };
   } catch {
     return null;
   }

@@ -65,6 +65,28 @@ button:hover {
   margin-bottom: 24px;
 }
 
+.band-name-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.band-name-field span {
+  color: #d6cec5;
+  font-weight: 700;
+}
+
+.band-name-field input {
+  width: min(420px, 100%);
+  box-sizing: border-box;
+  border: 1px solid #3f332b;
+  background: rgb(0 0 0 / 0.2);
+  color: #f4f1ea;
+  padding: 11px 12px;
+  border-radius: 6px;
+  font: inherit;
+}
+
 .route-grid,
 .action-grid {
   display: grid;

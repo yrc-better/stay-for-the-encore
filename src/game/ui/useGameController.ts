@@ -17,8 +17,8 @@ export function useGameController() {
   const [ending, setEnding] = useState<EndingResult | null>(null);
   const activeEvent = useMemo(() => (state ? getAvailableEvents(state)[0] ?? null : null), [state]);
 
-  function start(route: RouteId) {
-    const next = createInitialState(route);
+  function start(route: RouteId, bandName?: string) {
+    const next = createInitialState(route, bandName);
     saveGame(next);
     setState(next);
     setFeedback(null);

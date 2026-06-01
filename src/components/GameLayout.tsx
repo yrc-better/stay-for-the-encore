@@ -22,7 +22,7 @@ export function GameLayout({
   return (
     <section className="game-layout" aria-label="游戏主界面">
       <section className="summary-panel layout-card" aria-label="状态摘要">
-        <h1>夜行反馈</h1>
+        <h1>{state.bandName}</h1>
         <p className="month-label">{state.month}</p>
         <div className="stat-strip">
           <span>体力 {state.player.stamina}</span>

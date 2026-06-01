@@ -5,6 +5,7 @@ describe("createInitialState", () => {
   it("creates writer route stats from the data spec", () => {
     const state = createInitialState("writer");
 
+    expect(state.bandName).toBe("未命名乐队");
     expect(state.month).toBe("2027-05");
     expect(state.route).toBe("writer");
     expect(state.player.creativity).toBe(62);
@@ -31,5 +32,11 @@ describe("createInitialState", () => {
     expect(nextState.equipment.guitar.modifiers?.riffQuality).toBe(2);
     expect(nextState.equipment.pedals[0].tags).toEqual(["drive"]);
     expect(nextState.equipment.pedals[0].modifiers?.performanceStability).toBe(1);
+  });
+
+  it("stores a trimmed custom band name", () => {
+    const state = createInitialState("writer", "  海边回声  ");
+
+    expect(state.bandName).toBe("海边回声");
   });
 });

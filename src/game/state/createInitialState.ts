@@ -1,4 +1,5 @@
 import { BAND_INITIAL_STATS, PLAYER_INITIAL_STATS, RELATIONSHIP_INITIAL_STATS } from "../config/balance";
+import { normalizeBandName } from "../config/defaults";
 import { DEFAULT_EQUIPMENT } from "../config/equipment";
 import type { EquipmentItem, GameState, RouteId } from "../types";
 
@@ -10,8 +11,9 @@ function cloneEquipmentItem(item: EquipmentItem): EquipmentItem {
   };
 }
 
-export function createInitialState(route: RouteId): GameState {
+export function createInitialState(route: RouteId, bandName?: string): GameState {
   return {
+    bandName: normalizeBandName(bandName),
     month: "2027-05",
     route,
     player: { ...PLAYER_INITIAL_STATS[route] },

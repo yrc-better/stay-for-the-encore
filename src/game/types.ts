@@ -104,6 +104,7 @@ export interface HistoryEntry {
 }
 
 export interface GameState {
+  bandName: string;
   month: MonthId;
   route: RouteId;
   player: Record<PlayerStatKey, number>;

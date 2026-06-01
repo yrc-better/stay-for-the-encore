@@ -175,3 +175,36 @@ Run:
 git add docs/superpowers/specs/2026-05-31-responsive-ui-design.md docs/superpowers/plans/2026-05-31-responsive-ui.md src/App.test.tsx src/components/GameLayout.tsx src/styles.css
 git commit -m "feat: add responsive game layout"
 ```
+
+### Task 5: Band Name At Start
+
+**Files:**
+- Modify: `src/components/RouteSelect.tsx`
+- Modify: `src/components/GameLayout.tsx`
+- Modify: `src/game/state/createInitialState.ts`
+- Modify: `src/game/storage/saveGame.ts`
+- Test: `src/App.test.tsx`
+- Test: `src/game/state/createInitialState.test.ts`
+- Test: `src/game/storage/saveGame.test.ts`
+
+- [ ] **Step 1: Write failing tests**
+
+Add tests that expect a `乐队名` input on the route screen, `GameState.bandName` in initial state, and old saves without `bandName` to load with `未命名乐队`.
+
+- [ ] **Step 2: Implement state and UI**
+
+Add `bandName` to `GameState`, pass the route-screen input into `createInitialState`, display it in `GameLayout`, and normalize blank names to `未命名乐队`.
+
+- [ ] **Step 3: Preserve old saves**
+
+Update save loading so a save missing `state.bandName` is normalized to `未命名乐队` instead of being rejected.
+
+- [ ] **Step 4: Verify**
+
+Run:
+
+```bash
+PATH="/private/tmp/codex-node-v24.14.0-darwin-arm64/bin:$PATH" npm test -- src/App.test.tsx src/game/state/createInitialState.test.ts src/game/storage/saveGame.test.ts --run
+```
+
+Expected: all targeted tests pass.

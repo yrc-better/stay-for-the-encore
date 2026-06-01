@@ -19,6 +19,18 @@ describe("App", () => {
     expect(screen.getByRole("dialog")).toHaveTextContent("练到指尖发烫");
   });
 
+  it("starts a game with a custom band name", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.clear(screen.getByLabelText("乐队名"));
+    await user.type(screen.getByLabelText("乐队名"), "海边回声");
+    await user.click(screen.getByRole("button", { name: /创作型/ }));
+
+    expect(screen.getByRole("heading", { name: "海边回声" })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem(SAVE_KEY)!)?.state.bandName).toBe("海边回声");
+  });
+
   it("shows and resolves the prologue event through its choices", async () => {
     const user = userEvent.setup();
     render(<App />);

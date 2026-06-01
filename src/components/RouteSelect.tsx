@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { DEFAULT_BAND_NAME } from "../game/config/defaults";
 import type { RouteId } from "../game/types";
 
 const routes: Array<{ id: RouteId; label: string; description: string }> = [
@@ -7,14 +9,20 @@ const routes: Array<{ id: RouteId; label: string; description: string }> = [
   { id: "rebel", label: "叛逆型", description: "冲突多，风险高。" }
 ];
 
-export function RouteSelect({ onStart }: { onStart: (route: RouteId) => void }) {
+export function RouteSelect({ onStart }: { onStart: (route: RouteId, bandName: string) => void }) {
+  const [bandName, setBandName] = useState(DEFAULT_BAND_NAME);
+
   return (
     <main className="route-select">
       <section className="route-panel" aria-labelledby="route-title">
         <h1 id="route-title">乐队模拟器</h1>
+        <label className="band-name-field">
+          <span>乐队名</span>
+          <input value={bandName} onChange={(event) => setBandName(event.target.value)} />
+        </label>
         <div className="route-grid">
           {routes.map((route) => (
-            <button key={route.id} className="route-card" onClick={() => onStart(route.id)}>
+            <button key={route.id} className="route-card" onClick={() => onStart(route.id, bandName)}>
               <strong>{route.label}</strong>
               <span>{route.description}</span>
             </button>

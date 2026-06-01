@@ -23,6 +23,17 @@ describe("saveGame storage", () => {
 
     expect(loaded?.version).toBe(SAVE_VERSION);
     expect(loaded?.state.route).toBe("writer");
+    expect(loaded?.state.bandName).toBe("未命名乐队");
+  });
+
+  it("loads old saves without a band name using the default name", () => {
+    const payload = validPayload();
+    const { bandName: _bandName, ...legacyState } = payload.state;
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ...payload, state: legacyState }));
+
+    const loaded = loadSave();
+
+    expect(loaded?.state.bandName).toBe("未命名乐队");
   });
 
   it("rejects missing version saves", () => {
