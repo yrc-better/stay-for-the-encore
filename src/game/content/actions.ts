@@ -12,6 +12,7 @@ export type ActionId =
   | "rehearse"
   | "band_write"
   | "record"
+  | "release"
   | "perform"
   | "member_talk"
   | "promote"
@@ -69,6 +70,7 @@ export const ACTIONS: Record<ActionId, ActionDefinition> = {
     ]
   },
   record: { id: "record", label: "录音", group: "band", staminaCost: 35, effects: [{ kind: "bandStat", key: "funds", amount: -300 }, { kind: "playerStat", key: "fame", amount: 3 }] },
+  release: { id: "release", label: "发行", group: "band", staminaCost: 18, effects: [] },
   perform: { id: "perform", label: "演出", group: "band", staminaCost: 40, effects: [{ kind: "playerStat", key: "fame", amount: 6 }, { kind: "playerStat", key: "wealth", amount: 300 }, { kind: "bandStat", key: "fans", amount: 10 }, { kind: "playerStat", key: "stage", amount: 2 }, { kind: "playerStat", key: "health", amount: -3 }] },
   member_talk: { id: "member_talk", label: "成员谈话", group: "band", staminaCost: 12, effects: [{ kind: "playerStat", key: "stress", amount: -2 }] },
   promote: { id: "promote", label: "宣传", group: "band", staminaCost: 18, effects: [{ kind: "playerStat", key: "fame", amount: 4 }, { kind: "bandStat", key: "fans", amount: 8 }, { kind: "playerStat", key: "wealth", amount: -100 }, { kind: "playerStat", key: "stress", amount: 2 }] },

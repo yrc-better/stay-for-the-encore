@@ -6,6 +6,14 @@ export function equipmentRecordingBonus(state: GameState): number {
   return clamp(items.reduce((sum, item) => sum + (item.modifiers?.recordingQuality ?? 0), 0), -10, 15);
 }
 
+export function memberRecordingModifier(state: GameState): number {
+  return Object.values(state.memberStates).reduce((sum, member) => {
+    if (member.status === "away") return sum - 6;
+    if (member.status === "strained") return sum - 2;
+    return sum;
+  }, 0);
+}
+
 export function createRecording(state: GameState, workId: string): Omit<Recording, "id" | "createdAt"> {
   const work = state.works.find((candidate) => candidate.id === workId);
   if (!work) throw new Error(`Work not found: ${workId}`);
@@ -18,7 +26,8 @@ export function createRecording(state: GameState, workId: string): Omit<Recordin
         work.rehearsal * 0.25 +
         state.player.technique * 0.15 +
         state.band.cohesion * 0.1 +
-        equipmentRecordingBonus(state),
+        equipmentRecordingBonus(state) +
+        memberRecordingModifier(state),
       0,
       100
     )

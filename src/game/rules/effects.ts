@@ -1,6 +1,12 @@
+import {
+  ABILITY_PROGRESS_PER_POINT,
+  MONTHLY_ABILITY_PROGRESS_CAP,
+  isAbilityKey
+} from "../config/abilityGrowth";
 import { STAMINA } from "../config/balance";
-import type { BandStatKey, Effect, GameState, PlayerStatKey } from "../types";
+import type { AbilityKey, BandStatKey, Effect, GameState, PlayerStatKey, Recording, Release } from "../types";
 import { clamp } from "./clamp";
+import { resolveGraduationShow } from "./graduation";
 
 function id(prefix: string, count: number): string {
   return `${prefix}.${count + 1}`;
@@ -22,6 +28,36 @@ function clampBandStat(key: BandStatKey, value: number): number {
   return clamp(value, 0, 100000);
 }
 
+function getRecordingTypeForRelease(type: Release["type"]): Recording["type"] {
+  if (type === "single") return "single";
+  if (type === "ep" || type === "album") return "album_track";
+  return "demo";
+}
+
+function applyAbilityProgress(state: GameState, key: AbilityKey, amount: number): GameState {
+  const monthlyGain = state.monthly.abilityProgressGains[key];
+  const gain = clamp(amount, 0, MONTHLY_ABILITY_PROGRESS_CAP - monthlyGain);
+  if (gain <= 0) return state;
+
+  const totalProgress = state.abilityProgress[key] + gain;
+  const statGain = Math.floor(totalProgress / ABILITY_PROGRESS_PER_POINT);
+  const nextProgress = totalProgress % ABILITY_PROGRESS_PER_POINT;
+  const nextValue = clampPlayerStat(state, key, state.player[key] + statGain);
+
+  return {
+    ...state,
+    player: { ...state.player, [key]: nextValue },
+    abilityProgress: { ...state.abilityProgress, [key]: nextProgress },
+    monthly: {
+      ...state.monthly,
+      abilityProgressGains: {
+        ...state.monthly.abilityProgressGains,
+        [key]: monthlyGain + gain
+      }
+    }
+  };
+}
+
 type AdvanceWorkEffect = Extract<Effect, { kind: "advanceWork" }>;
 type WorkState = GameState["works"][number];
 
@@ -35,6 +71,10 @@ function selectAdvanceWorkTarget(state: GameState, effect: AdvanceWorkEffect): W
 export function applyEffects(state: GameState, effects: Effect[]): GameState {
   return effects.reduce<GameState>((current, effect) => {
     if (effect.kind === "playerStat") {
+      if (effect.amount > 0 && isAbilityKey(effect.key)) {
+        return applyAbilityProgress(current, effect.key, effect.amount);
+      }
+
       const nextValue = clampPlayerStat(current, effect.key, current.player[effect.key] + effect.amount);
       const overdraft = effect.key === "stamina" && nextValue < 0 && current.player.stamina >= 0 ? 1 : 0;
       return {
@@ -55,6 +95,19 @@ export function applyEffects(state: GameState, effects: Effect[]): GameState {
         relationships: {
           ...current.relationships,
           [effect.character]: clamp(current.relationships[effect.character] + effect.amount, 0, 100)
+        }
+      };
+    }
+    if (effect.kind === "memberStatus") {
+      return {
+        ...current,
+        memberStates: {
+          ...current.memberStates,
+          [effect.character]: {
+            status: effect.status,
+            note: effect.note,
+            updatedAt: current.month
+          }
         }
       };
     }
@@ -97,8 +150,14 @@ export function applyEffects(state: GameState, effects: Effect[]): GameState {
       };
     }
     if (effect.kind === "addRelease") {
+      const releasedRecordingIds = new Set(effect.release.recordingIds);
       return {
         ...current,
+        recordings: current.recordings.map((recording) =>
+          releasedRecordingIds.has(recording.id)
+            ? { ...recording, type: getRecordingTypeForRelease(effect.release.type), released: true }
+            : recording
+        ),
         releases: [
           ...current.releases,
           {
@@ -158,6 +217,9 @@ export function applyEffects(state: GameState, effects: Effect[]): GameState {
         ...current,
         queuedEvents: [...current.queuedEvents, effect.eventId]
       };
+    }
+    if (effect.kind === "resolveGraduationShow") {
+      return resolveGraduationShow(current);
     }
     return current;
   }, state);

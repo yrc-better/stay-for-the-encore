@@ -1,7 +1,12 @@
 import type { ActionId } from "./actions";
 import type { Feedback } from "../types";
 
-type ExtraFeedbackId = "restDiminished" | "bandRestDiminished" | "noRecordableWork" | "insufficientFunds";
+type ExtraFeedbackId =
+  | "restDiminished"
+  | "bandRestDiminished"
+  | "noRecordableWork"
+  | "insufficientFunds"
+  | "noReleasableRecording";
 
 export const FEEDBACK: Record<ActionId | ExtraFeedbackId, Feedback> = {
   practice: {
@@ -52,6 +57,10 @@ export const FEEDBACK: Record<ActionId | ExtraFeedbackId, Feedback> = {
     title: "录下此刻",
     body: "录音不会原谅犹豫。每一次没弹稳的地方，都被清楚地留了下来。"
   },
+  release: {
+    title: "作品上线",
+    body: "你们按下发布确认。那一刻之后，这首歌不再只是排练室里的秘密，它会被陌生人听见、跳过、收藏，或者记住。"
+  },
   perform: {
     title: "灯亮之前",
     body: "你听见台下说话声逐渐低下去。第一下扫弦之后，排练室以外的世界终于回应了你。"
@@ -83,5 +92,9 @@ export const FEEDBACK: Record<ActionId | ExtraFeedbackId, Feedback> = {
   insufficientFunds: {
     title: "钱还不够",
     body: "棚费、工程师和来回交通都要现金。歌已经准备好了，但账面还撑不起这次录音。"
+  },
+  noReleasableRecording: {
+    title: "还没有可发行的录音",
+    body: "现在没有未发布的录音。先把歌录下来，再决定它要以 Demo、单曲还是更完整的形式离开排练室。"
   }
 };

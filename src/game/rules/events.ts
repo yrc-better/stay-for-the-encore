@@ -1,30 +1,24 @@
 import { EVENTS } from "../content/events";
-import type { EventTrigger, GameEvent, GameState } from "../types";
+import type { GameEvent, GameState } from "../types";
+import { eventMatchesState } from "./eventSelection";
+import { triggerMatches } from "./eventTriggers";
 
-function hasFlag(state: GameState, key: string): boolean {
-  return Object.prototype.hasOwnProperty.call(state.flags, key);
+export { triggerMatches };
+
+function getEventById(eventId: string): GameEvent | undefined {
+  return EVENTS.find((event) => event.id === eventId);
 }
 
-export function triggerMatches(state: GameState, trigger: EventTrigger): boolean {
-  if (trigger.months && !trigger.months.includes(state.month)) return false;
-  if (trigger.flagsAll?.some((flag) => !hasFlag(state, flag))) return false;
-  if (trigger.flagsNone?.some((flag) => hasFlag(state, flag))) return false;
-  if (trigger.hasRiff && state.riffs.length === 0) return false;
-  if (trigger.hasCompletedSong && !state.works.some((work) => work.stage === "song")) return false;
-  if (trigger.hasDemo && !state.recordings.some((recording) => recording.type === "demo")) return false;
-  if (trigger.minRecordings && state.recordings.length < trigger.minRecordings) return false;
-  if (trigger.minPlayer && Object.entries(trigger.minPlayer).some(([key, value]) => state.player[key as keyof typeof state.player] < value!)) return false;
-  if (trigger.maxPlayer && Object.entries(trigger.maxPlayer).some(([key, value]) => state.player[key as keyof typeof state.player] > value!)) return false;
-  if (trigger.minBand && Object.entries(trigger.minBand).some(([key, value]) => state.band[key as keyof typeof state.band] < value!)) return false;
-  if (
-    trigger.minRelationship &&
-    Object.entries(trigger.minRelationship).some(([key, value]) => state.relationships[key as keyof typeof state.relationships] < value!)
-  ) {
-    return false;
-  }
-  return true;
+function getQueuedEvents(state: GameState): GameEvent[] {
+  return state.queuedEvents
+    .map(getEventById)
+    .filter((event): event is GameEvent => Boolean(event))
+    .filter((event) => eventMatchesState(state, event));
 }
 
 export function getAvailableEvents(state: GameState): GameEvent[] {
-  return EVENTS.filter((event) => triggerMatches(state, event.trigger)).sort((a, b) => b.priority - a.priority);
+  const queuedEvents = getQueuedEvents(state);
+  if (queuedEvents.length > 0) return queuedEvents;
+
+  return EVENTS.filter((event) => eventMatchesState(state, event)).sort((a, b) => b.priority - a.priority);
 }

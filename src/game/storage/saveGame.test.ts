@@ -11,6 +11,31 @@ function validPayload() {
   };
 }
 
+type CurrentState = ReturnType<typeof createInitialState>;
+type LegacyState = Partial<Record<keyof CurrentState, unknown>> & {
+  monthly?: Partial<Record<keyof CurrentState["monthly"], unknown>>;
+};
+
+function legacyStateWithoutAbilityProgress(): LegacyState {
+  const state = createInitialState("writer");
+  const legacyState: LegacyState = { ...state, monthly: { ...state.monthly } };
+  delete legacyState.abilityProgress;
+  delete legacyState.monthly?.abilityProgressGains;
+  return legacyState;
+}
+
+function legacyStateWithoutMemberStates(): LegacyState {
+  const legacyState: LegacyState = { ...createInitialState("writer") };
+  delete legacyState.memberStates;
+  return legacyState;
+}
+
+function legacyStateWithoutAnnualSummaries(): LegacyState {
+  const legacyState: LegacyState = { ...createInitialState("writer") };
+  delete legacyState.annualSummaries;
+  return legacyState;
+}
+
 describe("saveGame storage", () => {
   beforeEach(() => localStorage.clear());
   afterEach(() => vi.useRealTimers());
@@ -34,6 +59,106 @@ describe("saveGame storage", () => {
     const loaded = loadSave();
 
     expect(loaded?.state.bandName).toBe("未命名乐队");
+  });
+
+  it("migrates version 1 saves into phase-aware state", () => {
+    const legacyState = legacyStateWithoutAbilityProgress();
+    delete legacyState.phase;
+    delete legacyState.careerStage;
+    delete legacyState.eventLog;
+    delete legacyState.eventCooldowns;
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 1,
+        createdAt: "2027-05-01T00:00:00.000Z",
+        updatedAt: "2027-05-01T00:00:00.000Z",
+        state: legacyState
+      })
+    );
+
+    const loaded = loadSave();
+
+    expect(loaded?.version).toBe(SAVE_VERSION);
+    expect(loaded?.state.phase).toBe("campus");
+    expect(loaded?.state.careerStage).toBe("campus");
+    expect(loaded?.state.eventLog).toEqual([]);
+    expect(loaded?.state.eventCooldowns).toEqual({});
+    expect(loaded?.state.abilityProgress).toEqual({ technique: 0, creativity: 0, stage: 0 });
+    expect(loaded?.state.monthly.abilityProgressGains).toEqual({ technique: 0, creativity: 0, stage: 0 });
+  });
+
+  it("migrates version 2 saves into long-term ability progress state", () => {
+    const legacyState = legacyStateWithoutAbilityProgress();
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 2,
+        createdAt: "2027-05-01T00:00:00.000Z",
+        updatedAt: "2027-05-01T00:00:00.000Z",
+        state: legacyState
+      })
+    );
+
+    const loaded = loadSave();
+
+    expect(loaded?.version).toBe(SAVE_VERSION);
+    expect(loaded?.state.abilityProgress).toEqual({ technique: 0, creativity: 0, stage: 0 });
+    expect(loaded?.state.monthly.abilityProgressGains).toEqual({ technique: 0, creativity: 0, stage: 0 });
+  });
+
+  it("migrates version 3 saves into member state", () => {
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 3,
+        createdAt: "2027-05-01T00:00:00.000Z",
+        updatedAt: "2027-05-01T00:00:00.000Z",
+        state: legacyStateWithoutMemberStates()
+      })
+    );
+
+    const loaded = loadSave();
+
+    expect(loaded?.version).toBe(SAVE_VERSION);
+    expect(loaded?.state.memberStates.bass).toEqual({
+      status: "active",
+      note: "周航像队内的秤，习惯先稳住所有人的重量。",
+      updatedAt: "2027-05"
+    });
+  });
+
+  it("migrates version 4 saves into annual summaries state", () => {
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 4,
+        createdAt: "2027-05-01T00:00:00.000Z",
+        updatedAt: "2027-05-01T00:00:00.000Z",
+        state: legacyStateWithoutAnnualSummaries()
+      })
+    );
+
+    const loaded = loadSave();
+
+    expect(loaded?.version).toBe(SAVE_VERSION);
+    expect(loaded?.state.annualSummaries).toEqual([]);
+  });
+
+  it("rejects current saves with missing member state", () => {
+    const payload = validPayload();
+    const { memberStates: _memberStates, ...state } = payload.state;
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ...payload, state }));
+
+    expect(loadSave()).toBeNull();
+  });
+
+  it("rejects current saves with missing annual summaries", () => {
+    const payload = validPayload();
+    const { annualSummaries: _annualSummaries, ...state } = payload.state;
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ...payload, state }));
+
+    expect(loadSave()).toBeNull();
   });
 
   it("rejects missing version saves", () => {
@@ -71,6 +196,14 @@ describe("saveGame storage", () => {
   it("rejects saves with missing monthly counters", () => {
     const payload = validPayload();
     localStorage.setItem(SAVE_KEY, JSON.stringify({ ...payload, state: { ...payload.state, monthly: {} } }));
+
+    expect(loadSave()).toBeNull();
+  });
+
+  it("rejects current saves with missing ability progress", () => {
+    const payload = validPayload();
+    const { abilityProgress: _abilityProgress, ...state } = payload.state;
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ...payload, state }));
 
     expect(loadSave()).toBeNull();
   });

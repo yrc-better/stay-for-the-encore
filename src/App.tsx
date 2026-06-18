@@ -8,7 +8,7 @@ export default function App() {
   const controller = useGameController();
 
   if (!controller.state) {
-    return <RouteSelect onStart={controller.start} />;
+    return <RouteSelect saveRecoveryMessage={controller.saveRecoveryMessage} onStart={controller.start} />;
   }
 
   return (
@@ -19,6 +19,7 @@ export default function App() {
         onAction={controller.act}
         onEventChoice={controller.chooseEvent}
         onNextMonth={controller.nextMonth}
+        onEnding={controller.showEnding}
         onReset={controller.reset}
       />
       {controller.feedback && <FeedbackModal feedback={controller.feedback} onClose={controller.closeFeedback} />}

@@ -65,6 +65,18 @@ button:hover {
   margin-bottom: 24px;
 }
 
+.save-recovery-notice {
+  width: min(420px, 100%);
+  box-sizing: border-box;
+  margin: 0 0 18px;
+  border: 1px solid #a16207;
+  background: rgb(161 98 7 / 0.18);
+  color: #fde68a;
+  padding: 10px 12px;
+  border-radius: 6px;
+  line-height: 1.5;
+}
+
 .band-name-field {
   display: grid;
   gap: 8px;
@@ -117,7 +129,9 @@ button:hover {
   grid-template-columns: 280px minmax(0, 1fr) 280px;
   grid-template-areas:
     "summary event relationships"
-    "equipment actions history";
+    "equipment actions history"
+    "release actions history"
+    "annual actions history";
   gap: 16px;
   align-items: start;
 }
@@ -160,13 +174,112 @@ button:hover {
   grid-area: relationships;
 }
 
+.member-list {
+  display: grid;
+  gap: 10px;
+}
+
+.member-card {
+  border: 1px solid #4a4036;
+  background: rgb(0 0 0 / 0.14);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.member-card-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.member-card-header div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.member-card-header strong {
+  color: #f4f1ea;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.member-card-header span {
+  color: #b9b1a7;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.member-status {
+  flex: 0 0 auto;
+  border: 1px solid #6b5b4a;
+  border-radius: 999px;
+  padding: 3px 7px;
+  color: #f4f1ea;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.member-status-active {
+  border-color: #4d7c0f;
+  color: #d9f99d;
+}
+
+.member-status-strained {
+  border-color: #a16207;
+  color: #fde68a;
+}
+
+.member-status-away {
+  border-color: #b91c1c;
+  color: #fecaca;
+}
+
+.member-intro,
+.member-meta,
+.member-note {
+  margin: 8px 0 0;
+}
+
+.member-intro,
+.member-meta {
+  color: #b9b1a7;
+  font-size: 0.9rem;
+}
+
+.member-note {
+  color: #d6cec5;
+  font-size: 0.95rem;
+}
+
 .history-panel {
   grid-area: history;
 }
 
+.release-panel {
+  grid-area: release;
+}
+
+.annual-panel {
+  grid-area: annual;
+}
+
+.annual-summary {
+  border-top: 1px solid #3f332b;
+  padding-top: 10px;
+}
+
+.annual-summary h3 {
+  margin: 0 0 6px;
+  color: #f4f1ea;
+  font-size: 1rem;
+}
+
 .layout-card p,
 .feedback-modal p,
-.ending-view p {
+.ending-view p,
+.ending-view li {
   color: #d6cec5;
   line-height: 1.6;
 }
@@ -175,6 +288,22 @@ button:hover {
   color: #fde68a;
   font-size: 1.35rem;
   font-weight: 700;
+}
+
+.career-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -4px 0 14px;
+}
+
+.career-context span {
+  border: 1px solid #4a4036;
+  background: rgb(0 0 0 / 0.16);
+  color: #d6cec5;
+  padding: 6px 8px;
+  border-radius: 6px;
+  line-height: 1.3;
 }
 
 .stat-strip {
@@ -275,6 +404,12 @@ button:hover {
   inset: auto 24px 24px;
 }
 
+.ending-epilogue {
+  border-left: 3px solid #c6a15b;
+  padding-left: 12px;
+  color: #f4e8d0;
+}
+
 @media (max-width: 1099px) {
   .game-layout {
     grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.3fr);
@@ -282,7 +417,9 @@ button:hover {
       "summary event"
       "equipment actions"
       "relationships actions"
-      "history actions";
+      "history actions"
+      "release actions"
+      "annual actions";
   }
 
   .stat-strip {
@@ -308,7 +445,9 @@ button:hover {
       "actions"
       "equipment"
       "relationships"
-      "history";
+      "history"
+      "release"
+      "annual";
     gap: 12px;
   }
 

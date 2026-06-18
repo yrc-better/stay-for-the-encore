@@ -1,6 +1,14 @@
+import type { EndingTrigger } from "./config/endingRules";
+
 export type RouteId = "technician" | "writer" | "performer" | "rebel";
 export type MonthId = `${number}-${string}`;
 export type CharacterId = "vocal" | "bass" | "drums";
+export type MemberStatus = "active" | "strained" | "away";
+export type GamePhase = "campus" | "career";
+export type CareerStage = "campus" | "early" | "rising" | "mature" | "late";
+export type EventCategory = "anchor" | "random" | "rare" | "fallback";
+export type EventRarity = "common" | "uncommon" | "rare" | "legendary";
+export type AbilityKey = "technique" | "creativity" | "stage";
 
 export type PlayerStatKey =
   | "stamina"
@@ -37,6 +45,7 @@ export interface EquipmentLoadout {
 
 export interface MonthlyState {
   actionCounts: Record<string, number>;
+  abilityProgressGains: Record<AbilityKey, number>;
   staminaCapPenalty: number;
   riskEventsThisMonth: number;
 }
@@ -103,13 +112,42 @@ export interface HistoryEntry {
   tags: string[];
 }
 
+export interface EventLogEntry {
+  id: string;
+  month: MonthId;
+  category: EventCategory;
+}
+
+export interface MemberState {
+  status: MemberStatus;
+  note: string;
+  updatedAt: MonthId;
+}
+
+export interface AnnualSummary {
+  year: number;
+  month: MonthId;
+  releases: number;
+  totalReleaseSales: number;
+  bestReleaseCriticalScore: number;
+  performances: number;
+  averageRelationship: number;
+  healthDebt: number;
+  fame: number;
+  note: string;
+}
+
 export interface GameState {
   bandName: string;
   month: MonthId;
+  phase: GamePhase;
+  careerStage: CareerStage;
   route: RouteId;
   player: Record<PlayerStatKey, number>;
+  abilityProgress: Record<AbilityKey, number>;
   band: Record<BandStatKey, number>;
   relationships: Record<CharacterId, number>;
+  memberStates: Record<CharacterId, MemberState>;
   equipment: EquipmentLoadout;
   monthly: MonthlyState;
   counters: GameCounters;
@@ -119,13 +157,17 @@ export interface GameState {
   recordings: Recording[];
   releases: Release[];
   history: HistoryEntry[];
+  annualSummaries: AnnualSummary[];
   queuedEvents: string[];
+  eventLog: EventLogEntry[];
+  eventCooldowns: Record<string, number>;
 }
 
 export type Effect =
   | { kind: "playerStat"; key: PlayerStatKey; amount: number }
   | { kind: "bandStat"; key: BandStatKey; amount: number }
   | { kind: "relationship"; character: CharacterId; amount: number }
+  | { kind: "memberStatus"; character: CharacterId; status: MemberStatus; note: string }
   | { kind: "flag"; key: string; value: boolean | number | string }
   | { kind: "counter"; key: keyof GameCounters; amount: number }
   | { kind: "addRiff"; riff: Omit<Riff, "id" | "createdAt"> }
@@ -143,6 +185,7 @@ export type Effect =
   | { kind: "addRecording"; recording: Omit<Recording, "id" | "createdAt"> }
   | { kind: "addRelease"; release: Omit<Release, "id" | "month"> }
   | { kind: "addHistory"; entry: Omit<HistoryEntry, "id" | "month"> }
+  | { kind: "resolveGraduationShow" }
   | { kind: "queueEvent"; eventId: string };
 
 export interface Feedback {
@@ -165,10 +208,25 @@ export interface EventTrigger {
   maxPlayer?: Partial<Record<PlayerStatKey, number>>;
   minBand?: Partial<Record<BandStatKey, number>>;
   minRelationship?: Partial<Record<CharacterId, number>>;
+  maxRelationship?: Partial<Record<CharacterId, number>>;
+  memberStatus?: Partial<Record<CharacterId, MemberStatus>>;
   hasRiff?: boolean;
   hasCompletedSong?: boolean;
   hasDemo?: boolean;
+  hasAlbum?: boolean;
+  hasReleaseType?: Release["type"];
   minRecordings?: number;
+  minReleases?: number;
+  minAnnualSummaries?: number;
+  minLastYearReleases?: number;
+  minLastYearPerformances?: number;
+  minLastYearReleaseSales?: number;
+  minLastYearCriticalScore?: number;
+  minLastYearAverageRelationship?: number;
+  maxLastYearHealthDebt?: number;
+  minLastYearFame?: number;
+  minReleaseCriticalScore?: number;
+  minReleaseSales?: number;
   randomWeight?: number;
 }
 
@@ -178,12 +236,25 @@ export interface EventChoice {
   requirements?: EventTrigger;
   effects: Effect[];
   feedback: Feedback;
+  endingTrigger?: EndingTrigger;
 }
 
 export interface GameEvent {
   id: string;
   title: string;
   tags: string[];
+  category?: EventCategory;
+  phase?: GamePhase;
+  careerStages?: CareerStage[];
+  routes?: RouteId[];
+  rarity?: EventRarity;
+  weight?: number;
+  cooldownMonths?: number;
+  repeatable?: boolean;
+  maxPerYear?: number;
+  fallbackAfterMonths?: number;
+  blocksTags?: string[];
+  requiresTags?: string[];
   priority: number;
   once: boolean;
   trigger: EventTrigger;
