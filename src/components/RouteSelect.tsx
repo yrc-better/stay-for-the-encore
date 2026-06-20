@@ -21,23 +21,30 @@ export function RouteSelect({
   return (
     <main className="route-select">
       <section className="route-panel" aria-labelledby="route-title">
-        <h1 id="route-title">乐队模拟器</h1>
-        {saveRecoveryMessage && (
-          <p role="status" className="save-recovery-notice">
-            {saveRecoveryMessage}
-          </p>
-        )}
-        <label className="band-name-field">
-          <span>乐队名</span>
-          <input value={bandName} onChange={(event) => setBandName(event.target.value)} />
-        </label>
-        <div className="route-grid">
-          {routes.map((route) => (
-            <button key={route.id} className="route-card" onClick={() => onStart(route.id, bandName)}>
-              <strong>{route.label}</strong>
-              <span>{route.description}</span>
-            </button>
-          ))}
+        <div className="route-copy">
+          <p className="section-kicker">组建你的乐队</p>
+          <h1 id="route-title">乐队模拟器</h1>
+          <p className="route-lede">从毕业演出前的排练室出发，给这支只有一次机会的乐队取名，然后选择吉他手的起点。</p>
+        </div>
+
+        <div className="route-console">
+          {saveRecoveryMessage && (
+            <p role="status" className="save-recovery-notice">
+              {saveRecoveryMessage}
+            </p>
+          )}
+          <label className="band-name-field">
+            <span>乐队名</span>
+            <input value={bandName} onChange={(event) => setBandName(event.target.value)} />
+          </label>
+          <div className="route-grid">
+            {routes.map((route) => (
+              <button key={route.id} className="route-card" onClick={() => onStart(route.id, bandName)}>
+                <strong>{route.label}</strong>
+                <span>{route.description}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
     </main>

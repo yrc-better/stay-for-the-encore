@@ -15,4 +15,9 @@ describe("responsive CSS", () => {
       /@media \(max-width: 759px\)[\s\S]*\.action-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
     );
   });
+
+  it("uses a restrained cyan stage-console palette instead of saturated neon", () => {
+    expect(styles).toContain("--accent: #7ddde8;");
+    expect(styles).not.toMatch(/#20f4ff|#32f8ff|#196dff|#247cff/);
+  });
 });

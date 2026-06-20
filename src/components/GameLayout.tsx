@@ -58,8 +58,11 @@ export function GameLayout({
   return (
     <section className="game-layout" aria-label="游戏主界面">
       <section className="summary-panel layout-card" aria-label="状态摘要">
-        <h1>{state.bandName}</h1>
-        <p className="month-label">{state.month}</p>
+        <p className="section-kicker">乐队档案</p>
+        <div className="summary-title">
+          <h1>{state.bandName}</h1>
+          <p className="month-label">{state.month}</p>
+        </div>
         <div className="career-context" aria-label="生涯状态">
           <span>{PHASE_LABELS[state.phase]}</span>
           <span>{CAREER_STAGE_LABELS[state.careerStage]}</span>
@@ -74,7 +77,10 @@ export function GameLayout({
       </section>
 
       <section className="event-section layout-card" aria-label="当前事件">
-        <h2>当前事件</h2>
+        <div className="section-heading">
+          <p className="section-kicker">主舞台</p>
+          <h2>当前事件</h2>
+        </div>
         {activeEvent ? (
           <section className="event-panel">
             <h3>{activeEvent.title}</h3>
@@ -93,6 +99,10 @@ export function GameLayout({
       </section>
 
       <section className="actions-section" aria-label="行动选择">
+        <div className="action-board-title">
+          <p className="section-kicker">排练计划</p>
+          <h2>本月行动</h2>
+        </div>
         <ActionPanel onAction={onAction} />
         <div className="toolbar">
           <button onClick={onNextMonth}>进入下个月</button>
@@ -107,6 +117,7 @@ export function GameLayout({
       </section>
 
       <section className="equipment-panel layout-card" aria-label="装备">
+        <p className="section-kicker">器材角</p>
         <h2>装备</h2>
         <p>{state.equipment.guitar.name}</p>
         <p>{state.equipment.pedals.map((pedal) => pedal.name).join(" / ")}</p>
@@ -114,6 +125,7 @@ export function GameLayout({
       </section>
 
       <section className="relationships-panel members-panel layout-card" aria-label="队友状态">
+        <p className="section-kicker">后台成员</p>
         <h2>队友状态</h2>
         <div className="member-list">
           {MEMBER_IDS.map((memberId) => {
@@ -143,6 +155,7 @@ export function GameLayout({
       </section>
 
       <section className="history-panel layout-card" aria-label="履历">
+        <p className="section-kicker">后台记录</p>
         <h2>履历</h2>
         {state.history.length === 0 ? (
           <p>尚无履历</p>
@@ -152,6 +165,7 @@ export function GameLayout({
       </section>
 
       <section className="release-panel layout-card" aria-label="发行作品">
+        <p className="section-kicker">发行台账</p>
         <h2>发行作品</h2>
         {state.releases.length === 0 ? (
           <p>尚无发行</p>
@@ -166,6 +180,7 @@ export function GameLayout({
       </section>
 
       <section className="annual-panel layout-card" aria-label="年度摘要">
+        <p className="section-kicker">年度回声</p>
         <h2>年度摘要</h2>
         {state.annualSummaries.length === 0 ? (
           <p>尚无年度摘要</p>

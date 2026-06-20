@@ -67,6 +67,20 @@ describe("App", () => {
     expect(JSON.parse(localStorage.getItem(SAVE_KEY)!)?.state.bandName).toBe("海边回声");
   });
 
+  it("presents the redesigned rehearsal room interface hierarchy", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(screen.getByText("组建你的乐队")).toBeInTheDocument();
+
+    await startWriterGame(user);
+
+    expect(screen.getByText("主舞台")).toBeInTheDocument();
+    expect(screen.getByText("排练计划")).toBeInTheDocument();
+    expect(screen.getByText("后台记录")).toBeInTheDocument();
+    expect(screen.getByText("器材角")).toBeInTheDocument();
+  });
+
   it("shows a story popup after band naming and route selection", async () => {
     const user = userEvent.setup();
     render(<App />);
