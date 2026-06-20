@@ -60,6 +60,15 @@ describe("event triggers", () => {
     }
   });
 
+  it("supports exact flag value predicates for branching story consequences", () => {
+    const state = createInitialState("writer");
+    state.flags["label.firstContractResolved"] = "signed";
+
+    expect(triggerMatches(state, { flagValues: { "label.firstContractResolved": "signed" } })).toBe(true);
+    expect(triggerMatches(state, { flagValues: { "label.firstContractResolved": "independent" } })).toBe(false);
+    expect(triggerMatches(state, { flagValues: { "label.missing": "signed" } })).toBe(false);
+  });
+
   it("excludes the prologue event when its done flag is present", () => {
     const state = createInitialState("writer");
     state.flags["prologue.rehearsalArgumentDone"] = false;
@@ -454,6 +463,43 @@ describe("event triggers", () => {
     state.flags["label.contractTermsDiscussed"] = true;
 
     expect(eventMatchesState(state, firstContract!)).toBe(true);
+  });
+
+  it("branches label aftermath stories based on the first contract decision", () => {
+    const state = careerState("rising", "2030-09");
+    state.player.fame = 45;
+    state.band.fans = 520;
+    state.band.reputation = 45;
+    state.band.workQuality = 68;
+    state.releases.push({
+      id: "release.1",
+      month: "2030-03",
+      type: "ep",
+      title: "潮湿房间",
+      recordingIds: ["recording.1", "recording.2", "recording.3"],
+      sales: 1900,
+      criticalScore: 73,
+      fameImpact: 12,
+      awards: []
+    });
+
+    const deadlinePressure = EVENTS.find((event) => event.id === "career.random.label_deadline_pressure");
+    const indieScramble = EVENTS.find((event) => event.id === "career.random.indie_distribution_scramble");
+
+    expect(deadlinePressure).toBeDefined();
+    expect(indieScramble).toBeDefined();
+    expect(eventMatchesState(state, deadlinePressure!)).toBe(false);
+    expect(eventMatchesState(state, indieScramble!)).toBe(false);
+
+    state.flags["label.firstContractResolved"] = "signed";
+
+    expect(eventMatchesState(state, deadlinePressure!)).toBe(true);
+    expect(eventMatchesState(state, indieScramble!)).toBe(false);
+
+    state.flags["label.firstContractResolved"] = "independent";
+
+    expect(eventMatchesState(state, deadlinePressure!)).toBe(false);
+    expect(eventMatchesState(state, indieScramble!)).toBe(true);
   });
 
   it("unlocks first album story beats from album-level release progress", () => {

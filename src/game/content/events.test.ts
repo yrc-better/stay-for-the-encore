@@ -37,6 +37,8 @@ describe("event content", () => {
       "career.rare.contract_terms_table",
       "career.random.label_image_request",
       "career.anchor.first_contract_decision",
+      "career.random.label_deadline_pressure",
+      "career.random.indie_distribution_scramble",
       "career.random.family_reality_question",
       "career.random.rent_due_rehearsal_week",
       "career.random.day_job_night_rehearsal",

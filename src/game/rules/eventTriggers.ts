@@ -21,6 +21,12 @@ export function triggerMatches(state: GameState, trigger: EventTrigger): boolean
   if (trigger.months && !trigger.months.includes(state.month)) return false;
   if (trigger.flagsAll?.some((flag) => !hasFlag(state, flag))) return false;
   if (trigger.flagsNone?.some((flag) => hasFlag(state, flag))) return false;
+  if (
+    trigger.flagValues &&
+    Object.entries(trigger.flagValues).some(([key, value]) => !hasFlag(state, key) || state.flags[key] !== value)
+  ) {
+    return false;
+  }
   if (trigger.hasRiff && state.riffs.length === 0) return false;
   if (trigger.hasCompletedSong && !state.works.some((work) => work.stage === "song")) return false;
   if (trigger.hasDemo && !state.recordings.some((recording) => recording.type === "demo")) return false;

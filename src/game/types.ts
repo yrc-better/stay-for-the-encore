@@ -204,6 +204,7 @@ export interface EventTrigger {
   months?: MonthId[];
   flagsAll?: string[];
   flagsNone?: string[];
+  flagValues?: Record<string, boolean | number | string>;
   minPlayer?: Partial<Record<PlayerStatKey, number>>;
   maxPlayer?: Partial<Record<PlayerStatKey, number>>;
   minBand?: Partial<Record<BandStatKey, number>>;

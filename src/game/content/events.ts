@@ -1699,6 +1699,120 @@ export const EVENTS: GameEvent[] = [
     ]
   },
   {
+    id: "career.random.label_deadline_pressure",
+    title: "厂牌排期上的红线",
+    tags: ["career", "random", "label", "contract", "pressure", "release"],
+    category: "random",
+    phase: "career",
+    careerStages: ["rising", "mature"],
+    rarity: "uncommon",
+    weight: 2,
+    cooldownMonths: 8,
+    repeatable: true,
+    priority: 43,
+    once: false,
+    trigger: {
+      flagsAll: ["campus.graduationShowDone"],
+      flagValues: { "label.firstContractResolved": "signed" },
+      minReleases: 1,
+      minPlayer: { fame: 35 },
+      minBand: { fans: 350, reputation: 35 }
+    },
+    body: "厂牌发来新的排期表，录音、物料、预热、上线日期都被排成一条没有停顿的线。它确实让下一步更清楚，也让每个人的呼吸变短。",
+    choices: [
+      {
+        id: "meet_label_deadline",
+        label: "按厂牌节点推进",
+        effects: [
+          { kind: "bandStat", key: "funds", amount: 500 },
+          { kind: "bandStat", key: "fans", amount: 45 },
+          { kind: "playerStat", key: "fame", amount: 4 },
+          { kind: "playerStat", key: "stress", amount: 5 },
+          { kind: "counter", key: "contractCompromises", amount: 1 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "contract",
+              title: "按厂牌排期推进发行",
+              description: "签约后，乐队第一次按外部排期推进发行。门被打开得更大，时间也开始被别人标注。",
+              weight: 3,
+              tags: ["career", "label", "contract", "release"]
+            }
+          }
+        ],
+        feedback: { title: "红线没有后退", body: "你们把排期贴在墙上。它让所有人都动了起来，也让唐野第一次说，节拍器好像不只在歌里。" }
+      },
+      {
+        id: "renegotiate_deadline",
+        label: "要求延期保住质量",
+        effects: [
+          { kind: "bandStat", key: "reputation", amount: 3 },
+          { kind: "bandStat", key: "funds", amount: -200 },
+          { kind: "playerStat", key: "stress", amount: 2 },
+          { kind: "relationship", character: "vocal", amount: 1 }
+        ],
+        feedback: { title: "延期被写进邮件", body: "你们没有把歌塞进那个日期。厂牌没有立刻高兴，但林夏说，这至少证明合同还没有替你们唱歌。" }
+      }
+    ]
+  },
+  {
+    id: "career.random.indie_distribution_scramble",
+    title: "独立发行的奔波",
+    tags: ["career", "random", "label", "independent", "release", "pressure"],
+    category: "random",
+    phase: "career",
+    careerStages: ["rising", "mature"],
+    rarity: "uncommon",
+    weight: 2,
+    cooldownMonths: 8,
+    repeatable: true,
+    priority: 42,
+    once: false,
+    trigger: {
+      flagsAll: ["campus.graduationShowDone"],
+      flagValues: { "label.firstContractResolved": "independent" },
+      minReleases: 1,
+      minPlayer: { fame: 32 },
+      minBand: { fans: 280, reputation: 35 }
+    },
+    body: "没有厂牌排期以后，所有事情回到你们手里：上架、海报、场地沟通、媒体私信，还有一张永远算不完的预算表。",
+    choices: [
+      {
+        id: "run_indie_campaign",
+        label: "自己跑完整宣发",
+        effects: [
+          { kind: "bandStat", key: "fans", amount: 50 },
+          { kind: "bandStat", key: "reputation", amount: 4 },
+          { kind: "bandStat", key: "funds", amount: -350 },
+          { kind: "playerStat", key: "stress", amount: 5 },
+          { kind: "relationship", character: "bass", amount: 1 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "release",
+              title: "独立发行继续推进",
+              description: "拒绝合约后，乐队自己完成了一轮发行奔波。没有外部资源，但每一步都留下了自己的指纹。",
+              weight: 3,
+              tags: ["career", "independent", "release"]
+            }
+          }
+        ],
+        feedback: { title: "每封私信都自己发", body: "周航把表格拆成很多页，你们一项项填完。效率不漂亮，但每一个确认回复都像自己争来的舞台。" }
+      },
+      {
+        id: "narrow_indie_release",
+        label: "缩小发行范围",
+        effects: [
+          { kind: "bandStat", key: "fans", amount: 18 },
+          { kind: "bandStat", key: "reputation", amount: 2 },
+          { kind: "bandStat", key: "funds", amount: -120 },
+          { kind: "playerStat", key: "stress", amount: -1 }
+        ],
+        feedback: { title: "发行半径变小", body: "你们少做了几件看起来应该做的事，把力气留给歌本身。唐野说，小一点也好，至少每一下都打在自己能听见的地方。" }
+      }
+    ]
+  },
+  {
     id: "career.random.family_reality_question",
     title: "家里问你到底靠什么生活",
     tags: ["career", "random", "life", "family", "pressure"],
