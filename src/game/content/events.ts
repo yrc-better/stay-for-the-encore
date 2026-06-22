@@ -3327,6 +3327,152 @@ export const EVENTS: GameEvent[] = [
     ]
   },
   {
+    id: "career.random.festival_afterglow_hangover",
+    title: "音乐节之后的排练室",
+    tags: ["career", "random", "festival", "performance", "aftermath", "fan"],
+    category: "random",
+    phase: "career",
+    careerStages: ["rising", "mature", "late"],
+    rarity: "uncommon",
+    weight: 2,
+    cooldownMonths: 8,
+    repeatable: false,
+    priority: 34,
+    once: false,
+    trigger: {
+      flagsAll: ["campus.graduationShowDone"],
+      historyTagMin: { tag: "festival", count: 1 },
+      minPlayer: { fame: 30, stage: 45 },
+      minBand: { fans: 120, reputation: 25 }
+    },
+    body: "音乐节结束后一周，手机里还在弹出陌生人拍下的视频。可排练室里只剩白炽灯、汗味和一个问题：那天下午被风托起来的东西，到底能不能在四面墙里重新站住。",
+    choices: [
+      {
+        id: "chase_bigger_stage_sound",
+        label: "把新歌写得更适合大舞台",
+        effects: [
+          { kind: "playerStat", key: "fame", amount: 4 },
+          { kind: "playerStat", key: "stage", amount: 2 },
+          { kind: "playerStat", key: "stress", amount: 4 },
+          { kind: "bandStat", key: "fans", amount: 35 },
+          { kind: "bandStat", key: "reputation", amount: 3 },
+          { kind: "relationship", character: "drums", amount: -1 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "event",
+              title: "音乐节之后的野心",
+              description: "音乐节让你们开始用更大的舞台想象新歌，也让排练室第一次显得有点窄。",
+              weight: 3,
+              tags: ["career", "festival", "aftermath", "songwriting"]
+            }
+          }
+        ],
+        feedback: {
+          title: "草地还在耳朵里",
+          body: "你把副歌推得更开。唐野皱眉说不是每首歌都要举手，但他还是把鼓点打得更高。"
+        }
+      },
+      {
+        id: "let_attention_settle",
+        label: "先把注意力收回排练室",
+        effects: [
+          { kind: "bandStat", key: "cohesion", amount: 3 },
+          { kind: "bandStat", key: "fans", amount: 12 },
+          { kind: "playerStat", key: "health", amount: 2 },
+          { kind: "relationship", character: "bass", amount: 2 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "event",
+              title: "音乐节后的安静排练",
+              description: "你们没有急着追逐下一片草地，而是把那天的亮光慢慢折回排练室。",
+              weight: 2,
+              tags: ["career", "festival", "aftermath", "rehearsal"]
+            }
+          }
+        ],
+        feedback: {
+          title: "灯光慢慢落回来",
+          body: "周航把手机扣在桌上，说真正留下来的不是播放量，是下一次进副歌时所有人还在不在。"
+        }
+      }
+    ]
+  },
+  {
+    id: "career.random.tour_van_silence",
+    title: "巡演车上的沉默",
+    tags: ["career", "random", "tour", "performance", "aftermath", "member"],
+    category: "random",
+    phase: "career",
+    careerStages: ["rising", "mature", "late"],
+    rarity: "uncommon",
+    weight: 2,
+    cooldownMonths: 9,
+    repeatable: false,
+    priority: 36,
+    once: false,
+    trigger: {
+      flagsAll: ["campus.graduationShowDone"],
+      historyTagMin: { tag: "tour", count: 1 },
+      minPlayer: { fame: 40, stage: 50 },
+      minBand: { fans: 300, reputation: 35 }
+    },
+    body: "巡演回来后的第一次排练，谁都没有迟到，也谁都没有先说话。几座城市的掌声还在，但车窗、夜路、预算表和没睡够的脸，也一起被带回了排练室。",
+    choices: [
+      {
+        id: "name_the_exhaustion",
+        label: "把疲惫摊开说清楚",
+        effects: [
+          { kind: "playerStat", key: "stress", amount: -3 },
+          { kind: "playerStat", key: "health", amount: 2 },
+          { kind: "bandStat", key: "cohesion", amount: 3 },
+          { kind: "relationship", character: "vocal", amount: 2 },
+          { kind: "relationship", character: "drums", amount: 2 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "member",
+              title: "巡演后的坦白",
+              description: "你们第一次认真谈巡演留下的疲惫。掌声没有被否定，代价也没有被假装不存在。",
+              weight: 3,
+              tags: ["career", "tour", "aftermath", "member"]
+            }
+          }
+        ],
+        feedback: {
+          title: "沉默被拆开",
+          body: "林夏先说她有一晚差点唱不出来。唐野低头笑了一下，说他那晚其实也快散了。"
+        }
+      },
+      {
+        id: "turn_road_fatigue_into_song",
+        label: "把路上的疲惫写进新歌",
+        effects: [
+          { kind: "playerStat", key: "creativity", amount: 3 },
+          { kind: "playerStat", key: "stress", amount: 3 },
+          { kind: "bandStat", key: "workQuality", amount: 4 },
+          { kind: "bandStat", key: "reputation", amount: 2 },
+          { kind: "relationship", character: "bass", amount: -1 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "event",
+              title: "巡演路上的新歌",
+              description: "巡演的夜路被写进新歌。它不像胜利总结，更像一张没有睡够的车票。",
+              weight: 3,
+              tags: ["career", "tour", "aftermath", "songwriting"]
+            }
+          }
+        ],
+        feedback: {
+          title: "夜路进了和弦",
+          body: "你把车窗外的钠灯写成一组下行和弦。周航说这首歌很真，只是听起来也很累。"
+        }
+      }
+    ]
+  },
+  {
     id: "career.anchor.rising_annual_review",
     title: "第一份真正的年度回声",
     tags: ["career", "anchor", "annual", "rising", "reflection"],

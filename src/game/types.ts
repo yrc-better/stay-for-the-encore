@@ -228,6 +228,7 @@ export interface EventTrigger {
   minLastYearFame?: number;
   minReleaseCriticalScore?: number;
   minReleaseSales?: number;
+  historyTagMin?: { tag: string; count: number };
   randomWeight?: number;
 }
 

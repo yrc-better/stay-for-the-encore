@@ -15,6 +15,10 @@ function latestAnnualSummary(state: GameState): GameState["annualSummaries"][num
   return state.annualSummaries.at(-1) ?? null;
 }
 
+function historyTagCount(state: GameState, tag: string): number {
+  return state.history.filter((entry) => entry.tags.includes(tag)).length;
+}
+
 export function triggerMatches(state: GameState, trigger: EventTrigger): boolean {
   const latestSummary = latestAnnualSummary(state);
 
@@ -70,6 +74,9 @@ export function triggerMatches(state: GameState, trigger: EventTrigger): boolean
     return false;
   }
   if (trigger.minReleaseSales && getBestReleaseSales(state) < trigger.minReleaseSales) return false;
+  if (trigger.historyTagMin && historyTagCount(state, trigger.historyTagMin.tag) < trigger.historyTagMin.count) {
+    return false;
+  }
   if (
     trigger.minPlayer &&
     Object.entries(trigger.minPlayer).some(([key, value]) => state.player[key as keyof typeof state.player] < value!)

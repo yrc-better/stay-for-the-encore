@@ -69,6 +69,26 @@ describe("event triggers", () => {
     expect(triggerMatches(state, { flagValues: { "label.missing": "signed" } })).toBe(false);
   });
 
+  it("supports history tag predicates for sandbox aftermath events", () => {
+    const state = createInitialState("writer");
+
+    expect(triggerMatches(state, { historyTagMin: { tag: "festival", count: 1 } })).toBe(false);
+
+    state.history.push({
+      id: "history.festival.1",
+      month: "2030-06",
+      type: "performance",
+      title: "音乐节侧台",
+      description: "专辑把乐队带到音乐节侧台。",
+      weight: 4,
+      tags: ["career", "festival", "performance", "album"]
+    });
+
+    expect(triggerMatches(state, { historyTagMin: { tag: "festival", count: 1 } })).toBe(true);
+    expect(triggerMatches(state, { historyTagMin: { tag: "festival", count: 2 } })).toBe(false);
+    expect(triggerMatches(state, { historyTagMin: { tag: "tour", count: 1 } })).toBe(false);
+  });
+
   it("excludes the prologue event when its done flag is present", () => {
     const state = createInitialState("writer");
     state.flags["prologue.rehearsalArgumentDone"] = false;
@@ -307,6 +327,51 @@ describe("event triggers", () => {
     expect(tour).toBeDefined();
     expect(eventMatchesState(state, festival!)).toBe(true);
     expect(eventMatchesState(state, tour!)).toBe(true);
+  });
+
+  it("unlocks festival and tour aftermath from completed performance history", () => {
+    const state = createInitialState("writer");
+    state.month = "2030-08";
+    state.phase = "career";
+    state.careerStage = "rising";
+    state.flags["campus.graduationShowDone"] = true;
+    state.player.fame = 64;
+    state.player.stage = 62;
+    state.band.fans = 760;
+    state.band.reputation = 58;
+
+    const festivalAftermath = EVENTS.find((event) => event.id === "career.random.festival_afterglow_hangover");
+    const tourAftermath = EVENTS.find((event) => event.id === "career.random.tour_van_silence");
+
+    expect(festivalAftermath).toBeDefined();
+    expect(tourAftermath).toBeDefined();
+    expect(eventMatchesState(state, festivalAftermath!)).toBe(false);
+    expect(eventMatchesState(state, tourAftermath!)).toBe(false);
+
+    state.history.push({
+      id: "history.festival.1",
+      month: "2030-07",
+      type: "performance",
+      title: "音乐节侧台",
+      description: "陌生观众从远处走近。",
+      weight: 4,
+      tags: ["career", "festival", "performance", "album"]
+    });
+
+    expect(eventMatchesState(state, festivalAftermath!)).toBe(true);
+    expect(eventMatchesState(state, tourAftermath!)).toBe(false);
+
+    state.history.push({
+      id: "history.tour.1",
+      month: "2030-07",
+      type: "performance",
+      title: "第一次专辑巡演",
+      description: "几座城市把专辑变成路线。",
+      weight: 5,
+      tags: ["career", "tour", "performance", "album"]
+    });
+
+    expect(eventMatchesState(state, tourAftermath!)).toBe(true);
   });
 
   it("unlocks release reaction events from release results", () => {

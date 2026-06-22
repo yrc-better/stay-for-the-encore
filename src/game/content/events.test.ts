@@ -41,6 +41,8 @@ describe("event content", () => {
       "career.anchor.first_contract_decision",
       "career.random.label_deadline_pressure",
       "career.random.indie_distribution_scramble",
+      "career.random.festival_afterglow_hangover",
+      "career.random.tour_van_silence",
       "career.random.family_reality_question",
       "career.random.rent_due_rehearsal_week",
       "career.random.day_job_night_rehearsal",
