@@ -1493,6 +1493,107 @@ export const EVENTS: GameEvent[] = [
     ]
   },
   {
+    id: "career.random.fan_misread_lyric",
+    title: "被误读的一句歌词",
+    tags: ["career", "random", "fan", "media", "release", "pressure"],
+    category: "random",
+    phase: "career",
+    careerStages: ["early", "rising", "mature"],
+    rarity: "uncommon",
+    weight: 2,
+    cooldownMonths: 7,
+    repeatable: false,
+    priority: 41,
+    once: false,
+    trigger: {
+      flagsAll: ["campus.graduationShowDone", "fan.firstRegularSeen"],
+      flagsNone: ["fan.lyricMisreadHandled"],
+      minReleases: 1,
+      minPlayer: { fame: 28 },
+      minBand: { fans: 220, reputation: 28 }
+    },
+    body: "一段歌词被截出来转发，配上了和原意完全不同的解读。那条帖子下面有人说终于懂你们了，可你知道他们懂到的是另一首歌。",
+    choices: [
+      {
+        id: "explain_lyric_origin",
+        label: "公开解释这句歌词",
+        effects: [
+          { kind: "bandStat", key: "reputation", amount: 2 },
+          { kind: "playerStat", key: "stress", amount: 3 },
+          { kind: "relationship", character: "vocal", amount: 1 },
+          { kind: "flag", key: "fan.lyricMisreadHandled", value: "explained" }
+        ],
+        feedback: { title: "解释也成了文本", body: "你们把那句歌词的来处写清楚。有人感谢，有人觉得少了神秘感，林夏说至少这一次不是别人替你们讲完。" }
+      },
+      {
+        id: "let_fans_keep_reading",
+        label: "让误读继续生长",
+        effects: [
+          { kind: "bandStat", key: "fans", amount: 35 },
+          { kind: "bandStat", key: "reputation", amount: -1 },
+          { kind: "playerStat", key: "stress", amount: 2 },
+          { kind: "flag", key: "fan.lyricMisreadHandled", value: "left_open" }
+        ],
+        feedback: { title: "歌被带走了", body: "你没有纠正。那句歌词继续在评论里长出不同意思，周航说被听见不等于被理解，但也许歌离开以后本来就会这样。" }
+      }
+    ]
+  },
+  {
+    id: "career.random.fan_expectation_pressure",
+    title: "歌迷开始等那首旧歌",
+    tags: ["career", "random", "fan", "performance", "pressure", "release"],
+    category: "random",
+    phase: "career",
+    careerStages: ["early", "rising", "mature"],
+    rarity: "uncommon",
+    weight: 2,
+    cooldownMonths: 8,
+    repeatable: true,
+    priority: 43,
+    once: false,
+    trigger: {
+      flagsAll: ["campus.graduationShowDone", "fan.chorusMoment"],
+      minReleases: 1,
+      minPlayer: { fame: 38 },
+      minBand: { fans: 420, reputation: 35, workQuality: 58 }
+    },
+    body: "演出前排有人举起手写歌名。那是让你们第一次被合唱的歌，也是你们最近最怕被困住的歌。新歌还没开始，旧副歌已经在等。",
+    choices: [
+      {
+        id: "play_new_song_first",
+        label: "把新歌放到返场前",
+        effects: [
+          { kind: "bandStat", key: "reputation", amount: 4 },
+          { kind: "bandStat", key: "fans", amount: 20 },
+          { kind: "playerStat", key: "stress", amount: 3 },
+          { kind: "relationship", character: "vocal", amount: 1 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "performance",
+              title: "顶住旧歌期待",
+              description: "台下等着那首旧歌时，乐队仍把新歌放到最前面。被喜欢开始变成需要回应的重量。",
+              weight: 3,
+              tags: ["career", "fan", "performance", "songwriting"]
+            }
+          }
+        ],
+        feedback: { title: "新歌先响起来", body: "前几排安静了一会儿，随后有人跟上拍子。你知道这不是最容易的选择，但至少今晚没有只靠旧副歌活着。" }
+      },
+      {
+        id: "give_crowd_old_chorus",
+        label: "先唱他们想听的副歌",
+        effects: [
+          { kind: "bandStat", key: "fans", amount: 60 },
+          { kind: "playerStat", key: "fame", amount: 3 },
+          { kind: "bandStat", key: "reputation", amount: -1 },
+          { kind: "playerStat", key: "stress", amount: 2 }
+        ],
+        feedback: { title: "旧副歌又赢了一次", body: "合唱很快淹过监听，你们也确实把场子点起来了。下台后唐野问，下一首歌要怎么赢过大家已经爱上的那一首。" }
+      }
+    ]
+  },
+  {
     id: "career.random.label_a_and_r_email",
     title: "厂牌 A&R 的邮件",
     tags: ["career", "random", "label", "contract", "release"],

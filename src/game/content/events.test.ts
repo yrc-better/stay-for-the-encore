@@ -33,6 +33,8 @@ describe("event content", () => {
       "career.random.first_regular_fan",
       "career.random.fan_recording_clip",
       "career.rare.fan_chorus_moment",
+      "career.random.fan_misread_lyric",
+      "career.random.fan_expectation_pressure",
       "career.random.label_a_and_r_email",
       "career.rare.contract_terms_table",
       "career.random.label_image_request",

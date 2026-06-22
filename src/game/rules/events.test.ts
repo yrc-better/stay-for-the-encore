@@ -393,13 +393,19 @@ describe("event triggers", () => {
     const regularFan = EVENTS.find((event) => event.id === "career.random.first_regular_fan");
     const fanClip = EVENTS.find((event) => event.id === "career.random.fan_recording_clip");
     const chorusMoment = EVENTS.find((event) => event.id === "career.rare.fan_chorus_moment");
+    const misreadLyric = EVENTS.find((event) => event.id === "career.random.fan_misread_lyric");
+    const expectationPressure = EVENTS.find((event) => event.id === "career.random.fan_expectation_pressure");
 
     expect(regularFan).toBeDefined();
     expect(fanClip).toBeDefined();
     expect(chorusMoment).toBeDefined();
+    expect(misreadLyric).toBeDefined();
+    expect(expectationPressure).toBeDefined();
     expect(eventMatchesState(state, regularFan!)).toBe(true);
     expect(eventMatchesState(state, fanClip!)).toBe(false);
     expect(eventMatchesState(state, chorusMoment!)).toBe(false);
+    expect(eventMatchesState(state, misreadLyric!)).toBe(false);
+    expect(eventMatchesState(state, expectationPressure!)).toBe(false);
 
     state.releases.push({
       id: "release.1",
@@ -419,6 +425,20 @@ describe("event triggers", () => {
 
     expect(eventMatchesState(state, fanClip!)).toBe(true);
     expect(eventMatchesState(state, chorusMoment!)).toBe(true);
+    expect(eventMatchesState(state, misreadLyric!)).toBe(false);
+    expect(eventMatchesState(state, expectationPressure!)).toBe(false);
+
+    state.flags["fan.firstRegularSeen"] = true;
+
+    expect(eventMatchesState(state, misreadLyric!)).toBe(true);
+    expect(eventMatchesState(state, expectationPressure!)).toBe(false);
+
+    state.flags["fan.chorusMoment"] = true;
+    state.player.fame = 40;
+    state.band.fans = 460;
+    state.band.reputation = 38;
+
+    expect(eventMatchesState(state, expectationPressure!)).toBe(true);
   });
 
   it("keeps label and first contract stories locked behind release credibility", () => {
