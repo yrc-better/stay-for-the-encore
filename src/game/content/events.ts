@@ -1939,7 +1939,8 @@ export const EVENTS: GameEvent[] = [
         effects: [
           { kind: "playerStat", key: "stress", amount: -2 },
           { kind: "playerStat", key: "wealth", amount: 120 },
-          { kind: "bandStat", key: "cohesion", amount: 1 }
+          { kind: "bandStat", key: "cohesion", amount: 1 },
+          { kind: "flag", key: "life.familyRealityQuestioned", value: "honest" }
         ],
         feedback: { title: "电话没有立刻挂断", body: "你说得很慢，对方也听得很慢。现实没有被说服，但至少这一晚你不用假装一切都很稳。" }
       },
@@ -1949,7 +1950,8 @@ export const EVENTS: GameEvent[] = [
         effects: [
           { kind: "playerStat", key: "stress", amount: 4 },
           { kind: "playerStat", key: "fame", amount: 1 },
-          { kind: "relationship", character: "bass", amount: -1 }
+          { kind: "relationship", character: "bass", amount: -1 },
+          { kind: "flag", key: "life.familyRealityQuestioned", value: "hidden" }
         ],
         feedback: { title: "谎话很顺", body: "你说最近还行，挂断后却不敢看周航摊开的账本。那句话没有骗过生活，只是暂时骗过了家里。" }
       }
@@ -1982,7 +1984,8 @@ export const EVENTS: GameEvent[] = [
           { kind: "bandStat", key: "funds", amount: 260 },
           { kind: "playerStat", key: "health", amount: -2 },
           { kind: "playerStat", key: "stress", amount: 2 },
-          { kind: "counter", key: "contractCompromises", amount: 1 }
+          { kind: "counter", key: "contractCompromises", amount: 1 },
+          { kind: "flag", key: "life.rentPressureFelt", value: "extra_show" }
         ],
         feedback: { title: "转账提醒安静了", body: "钱到账时你们都松了一口气。那场小活没人会记得，但它让下一次排练还可以发生。" }
       },
@@ -1992,7 +1995,8 @@ export const EVENTS: GameEvent[] = [
         effects: [
           { kind: "bandStat", key: "funds", amount: 180 },
           { kind: "bandStat", key: "workQuality", amount: -2 },
-          { kind: "playerStat", key: "stress", amount: -1 }
+          { kind: "playerStat", key: "stress", amount: -1 },
+          { kind: "flag", key: "life.rentPressureFelt", value: "cut_hours" }
         ],
         feedback: { title: "少租两个小时", body: "你们提前关灯离开。门合上时，唐野敲了敲鼓包，像是在向没练完的部分道歉。" }
       }
@@ -2025,7 +2029,8 @@ export const EVENTS: GameEvent[] = [
           { kind: "bandStat", key: "workQuality", amount: 3 },
           { kind: "playerStat", key: "wealth", amount: 180 },
           { kind: "playerStat", key: "health", amount: -4 },
-          { kind: "playerStat", key: "stress", amount: 3 }
+          { kind: "playerStat", key: "stress", amount: 3 },
+          { kind: "flag", key: "life.dayJobRehearsalStrain", value: "pushed" }
         ],
         feedback: { title: "夜被拉得很长", body: "排练是有效的，你也是真的累。林夏递水时没说教，只把下一遍的速度放慢了一点。" }
       },
@@ -2036,9 +2041,221 @@ export const EVENTS: GameEvent[] = [
           { kind: "playerStat", key: "health", amount: 2 },
           { kind: "playerStat", key: "stress", amount: -2 },
           { kind: "bandStat", key: "workQuality", amount: -1 },
-          { kind: "relationship", character: "drums", amount: 1 }
+          { kind: "relationship", character: "drums", amount: 1 },
+          { kind: "flag", key: "life.dayJobRehearsalStrain", value: "rested" }
         ],
         feedback: { title: "今天先停", body: "唐野说少练一遍不会毁掉乐队，手毁掉才会。你第一次觉得停下也是一种技术。" }
+      }
+    ]
+  },
+  {
+    id: "career.random.family_backstage_visit",
+    title: "家人站在后台门口",
+    tags: ["career", "random", "life", "family", "performance", "aftermath"],
+    category: "random",
+    phase: "career",
+    careerStages: ["early", "rising"],
+    rarity: "uncommon",
+    weight: 2,
+    cooldownMonths: 8,
+    repeatable: false,
+    priority: 34,
+    once: false,
+    trigger: {
+      flagsAll: ["campus.graduationShowDone", "life.familyRealityQuestioned"],
+      minPlayer: { fame: 18, stress: 35 },
+      maxPlayer: { wealth: 1200 }
+    },
+    body: "小场演出结束后，你在后台门口看见家里人。他们没有带花，也没有立刻评价，只是站在贴满旧海报的走廊里，像第一次真正走进你一直解释不清的生活。",
+    choices: [
+      {
+        id: "show_family_the_room",
+        label: "带他们看一眼后台",
+        effects: [
+          { kind: "playerStat", key: "stress", amount: -3 },
+          { kind: "bandStat", key: "cohesion", amount: 2 },
+          { kind: "bandStat", key: "fans", amount: 10 },
+          { kind: "relationship", character: "vocal", amount: 1 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "event",
+              title: "家人第一次来到后台",
+              description: "他们终于看见排练室和舞台之间的那条走廊。理解没有立刻发生，但距离变短了一点。",
+              weight: 3,
+              tags: ["career", "life", "family", "performance"]
+            }
+          }
+        ],
+        feedback: {
+          title: "门被推开一条缝",
+          body: "你介绍这间小后台时有点笨拙。林夏递来一瓶水，像是在替你证明，这里确实有人和你一起撑着。"
+        }
+      },
+      {
+        id: "keep_family_at_distance",
+        label: "把他们送到门外再回来",
+        effects: [
+          { kind: "playerStat", key: "stress", amount: 2 },
+          { kind: "playerStat", key: "creativity", amount: 2 },
+          { kind: "relationship", character: "bass", amount: -1 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "event",
+              title: "后台门口的距离",
+              description: "家人来过，又被你轻轻挡在乐队生活之外。那道门没有关响，却留下了回声。",
+              weight: 2,
+              tags: ["career", "life", "family", "distance"]
+            }
+          }
+        ],
+        feedback: {
+          title: "走廊很短",
+          body: "你说里面太乱，先别进了。周航看了你一眼，没有追问，但排练后的沉默比平时更长。"
+        }
+      }
+    ]
+  },
+  {
+    id: "career.random.rent_noise_warning",
+    title: "房东的噪音提醒",
+    tags: ["career", "random", "life", "rent", "rehearsal", "aftermath"],
+    category: "random",
+    phase: "career",
+    careerStages: ["early", "rising", "mature"],
+    rarity: "uncommon",
+    weight: 2,
+    cooldownMonths: 7,
+    repeatable: false,
+    priority: 33,
+    once: false,
+    trigger: {
+      flagsAll: ["campus.graduationShowDone", "life.rentPressureFelt"],
+      maxPlayer: { wealth: 900 },
+      minPlayer: { stress: 30 }
+    },
+    body: "房东发来消息，说隔壁又投诉了噪音，也提醒下个月租金不要再拖。那条消息夹在调音器和歌单截图之间，把排练室从梦里拽回合同条款。",
+    choices: [
+      {
+        id: "pay_extra_deposit",
+        label: "先交一笔押金稳住排练室",
+        effects: [
+          { kind: "playerStat", key: "wealth", amount: -260 },
+          { kind: "bandStat", key: "funds", amount: -180 },
+          { kind: "playerStat", key: "stress", amount: -1 },
+          { kind: "bandStat", key: "cohesion", amount: 2 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "event",
+              title: "押金换来排练室",
+              description: "你们用一笔很疼的钱换来排练室暂时稳定。下一首歌还可以在熟悉的墙里响起。",
+              weight: 3,
+              tags: ["career", "life", "rent", "rehearsal"]
+            }
+          }
+        ],
+        feedback: {
+          title: "墙暂时还在",
+          body: "转账成功后，房东回了一个句号。它很冷，但至少今晚音箱还能插在原来的插座上。"
+        }
+      },
+      {
+        id: "move_rehearsal_to_daytime",
+        label: "改成白天低音量排练",
+        effects: [
+          { kind: "bandStat", key: "workQuality", amount: -2 },
+          { kind: "playerStat", key: "health", amount: 2 },
+          { kind: "playerStat", key: "stress", amount: 1 },
+          { kind: "relationship", character: "drums", amount: -1 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "event",
+              title: "白天低音量排练",
+              description: "为了保住空间，你们把排练挪到白天，音量降下来，很多情绪也只能跟着收小。",
+              weight: 2,
+              tags: ["career", "life", "rent", "rehearsal"]
+            }
+          }
+        ],
+        feedback: {
+          title: "鼓声被垫子吃掉",
+          body: "唐野把鼓垫压得很紧。每一下都对，但每一下都像在提醒你们，这不是自由的音量。"
+        }
+      }
+    ]
+  },
+  {
+    id: "career.random.day_job_before_recording",
+    title: "录音前的临时班",
+    tags: ["career", "random", "life", "work", "recording", "health", "aftermath"],
+    category: "random",
+    phase: "career",
+    careerStages: ["early", "rising"],
+    rarity: "uncommon",
+    weight: 2,
+    cooldownMonths: 7,
+    repeatable: false,
+    priority: 35,
+    once: false,
+    trigger: {
+      flagsAll: ["campus.graduationShowDone", "life.dayJobRehearsalStrain"],
+      maxPlayer: { wealth: 1000 },
+      minPlayer: { stress: 35 },
+      minBand: { workQuality: 45 }
+    },
+    body: "录音前一天，临时班主管问你能不能加一晚。你看着棚费尾款和琴包里的备用弦，知道这不是简单的去或不去，而是把哪一种亏欠带进录音室。",
+    choices: [
+      {
+        id: "work_shift_then_record",
+        label: "接下临时班再去录音",
+        effects: [
+          { kind: "playerStat", key: "wealth", amount: 260 },
+          { kind: "bandStat", key: "workQuality", amount: 2 },
+          { kind: "playerStat", key: "health", amount: -4 },
+          { kind: "playerStat", key: "stress", amount: 3 },
+          { kind: "relationship", character: "vocal", amount: -1 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "recording",
+              title: "临时班后的录音",
+              description: "你带着一夜工作的疲惫走进录音室。钱补上了，手指却比平时更慢热。",
+              weight: 3,
+              tags: ["career", "life", "work", "recording"]
+            }
+          }
+        ],
+        feedback: {
+          title: "钱和疲惫一起到账",
+          body: "第一遍 solo 有点僵。林夏没有催你，只说先喝水，但她看向时钟的动作很轻也很清楚。"
+        }
+      },
+      {
+        id: "skip_shift_for_recording",
+        label: "放掉临时班保住录音状态",
+        effects: [
+          { kind: "playerStat", key: "wealth", amount: -120 },
+          { kind: "bandStat", key: "workQuality", amount: 4 },
+          { kind: "playerStat", key: "stress", amount: 1 },
+          { kind: "relationship", character: "drums", amount: 2 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "recording",
+              title: "空出录音前夜",
+              description: "你放掉一晚收入，把状态留给录音。生活没有因此变轻，歌却多了一点余地。",
+              weight: 3,
+              tags: ["career", "life", "work", "recording"]
+            }
+          }
+        ],
+        feedback: {
+          title: "手指醒得更早",
+          body: "钱少了一截，但第二天你进得很准。唐野在监听室里点头，说这次不是硬撑出来的。"
+        }
       }
     ]
   },

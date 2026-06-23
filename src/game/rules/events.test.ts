@@ -587,6 +587,50 @@ describe("event triggers", () => {
     expect(eventMatchesState(state, indieScramble!)).toBe(true);
   });
 
+  it("unlocks life pressure aftermath stories from prior life events", () => {
+    const state = careerState("early", "2028-09");
+    state.player.wealth = 520;
+    state.player.stress = 48;
+    state.player.fame = 22;
+    state.band.funds = 360;
+    state.band.workQuality = 52;
+
+    const familyQuestion = EVENTS.find((event) => event.id === "career.random.family_reality_question");
+    const rentWeek = EVENTS.find((event) => event.id === "career.random.rent_due_rehearsal_week");
+    const dayJobNight = EVENTS.find((event) => event.id === "career.random.day_job_night_rehearsal");
+    const familyVisit = EVENTS.find((event) => event.id === "career.random.family_backstage_visit");
+    const rentWarning = EVENTS.find((event) => event.id === "career.random.rent_noise_warning");
+    const dayJobRecording = EVENTS.find((event) => event.id === "career.random.day_job_before_recording");
+
+    expect(familyQuestion).toBeDefined();
+    expect(rentWeek).toBeDefined();
+    expect(dayJobNight).toBeDefined();
+    expect(familyVisit).toBeDefined();
+    expect(rentWarning).toBeDefined();
+    expect(dayJobRecording).toBeDefined();
+    expect(familyQuestion!.choices.every((choice) => choice.effects.some((effect) => effect.kind === "flag" && effect.key === "life.familyRealityQuestioned"))).toBe(true);
+    expect(rentWeek!.choices.every((choice) => choice.effects.some((effect) => effect.kind === "flag" && effect.key === "life.rentPressureFelt"))).toBe(true);
+    expect(dayJobNight!.choices.every((choice) => choice.effects.some((effect) => effect.kind === "flag" && effect.key === "life.dayJobRehearsalStrain"))).toBe(true);
+    expect(eventMatchesState(state, familyVisit!)).toBe(false);
+    expect(eventMatchesState(state, rentWarning!)).toBe(false);
+    expect(eventMatchesState(state, dayJobRecording!)).toBe(false);
+
+    state.flags["life.familyRealityQuestioned"] = "honest";
+
+    expect(eventMatchesState(state, familyVisit!)).toBe(true);
+    expect(eventMatchesState(state, rentWarning!)).toBe(false);
+    expect(eventMatchesState(state, dayJobRecording!)).toBe(false);
+
+    state.flags["life.rentPressureFelt"] = "extra_show";
+
+    expect(eventMatchesState(state, rentWarning!)).toBe(true);
+    expect(eventMatchesState(state, dayJobRecording!)).toBe(false);
+
+    state.flags["life.dayJobRehearsalStrain"] = "pushed";
+
+    expect(eventMatchesState(state, dayJobRecording!)).toBe(true);
+  });
+
   it("unlocks first album story beats from album-level release progress", () => {
     const state = careerState("rising", "2030-07");
     state.player.fame = 38;
