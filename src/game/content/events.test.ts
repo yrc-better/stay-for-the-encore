@@ -54,6 +54,8 @@ describe("event content", () => {
       "career.rare.producer_cut_long_song",
       "career.anchor.master_submitted_night",
       "career.random.first_album_review",
+      "career.random.album_sequence_second_guess",
+      "career.random.album_review_aftertaste",
       "career.random.old_song_rights_talk",
       "career.anchor.classic_catalog_tour",
       "career.random.turning_producer",

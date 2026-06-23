@@ -597,13 +597,19 @@ describe("event triggers", () => {
     const trackOrder = EVENTS.find((event) => event.id === "career.anchor.first_album_track_order");
     const masterNight = EVENTS.find((event) => event.id === "career.anchor.master_submitted_night");
     const albumReview = EVENTS.find((event) => event.id === "career.random.first_album_review");
+    const sequenceSecondGuess = EVENTS.find((event) => event.id === "career.random.album_sequence_second_guess");
+    const reviewAftertaste = EVENTS.find((event) => event.id === "career.random.album_review_aftertaste");
 
     expect(trackOrder).toBeDefined();
     expect(masterNight).toBeDefined();
     expect(albumReview).toBeDefined();
+    expect(sequenceSecondGuess).toBeDefined();
+    expect(reviewAftertaste).toBeDefined();
     expect(eventMatchesState(state, trackOrder!)).toBe(false);
     expect(eventMatchesState(state, masterNight!)).toBe(false);
     expect(eventMatchesState(state, albumReview!)).toBe(false);
+    expect(eventMatchesState(state, sequenceSecondGuess!)).toBe(false);
+    expect(eventMatchesState(state, reviewAftertaste!)).toBe(false);
 
     state.recordings.push(
       {
@@ -641,7 +647,9 @@ describe("event triggers", () => {
     state.flags["album.firstTrackOrderLocked"] = true;
 
     expect(eventMatchesState(state, masterNight!)).toBe(true);
+    expect(eventMatchesState(state, sequenceSecondGuess!)).toBe(true);
     expect(eventMatchesState(state, albumReview!)).toBe(false);
+    expect(eventMatchesState(state, reviewAftertaste!)).toBe(false);
 
     state.releases.push({
       id: "release.1",
@@ -656,6 +664,11 @@ describe("event triggers", () => {
     });
 
     expect(eventMatchesState(state, albumReview!)).toBe(true);
+    expect(eventMatchesState(state, reviewAftertaste!)).toBe(false);
+
+    state.flags["album.firstReviewSeen"] = true;
+
+    expect(eventMatchesState(state, reviewAftertaste!)).toBe(true);
   });
 
   it("unlocks member risk events from low relationships and high pressure", () => {

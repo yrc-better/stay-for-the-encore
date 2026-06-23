@@ -2429,6 +2429,147 @@ export const EVENTS: GameEvent[] = [
     ]
   },
   {
+    id: "career.random.album_sequence_second_guess",
+    title: "曲序定稿后的返工",
+    tags: ["career", "random", "album", "release", "songwriting", "pressure"],
+    category: "random",
+    phase: "career",
+    careerStages: ["rising", "mature"],
+    rarity: "uncommon",
+    weight: 2,
+    cooldownMonths: 7,
+    repeatable: false,
+    priority: 39,
+    once: false,
+    trigger: {
+      flagsAll: ["campus.graduationShowDone", "album.firstTrackOrderLocked"],
+      minRecordings: 3,
+      minBand: { workQuality: 60, reputation: 35 }
+    },
+    body: "曲序定下来以后，问题反而变多了。开场曲会不会太重，第三首是不是来得太早，结尾那段留白到底是克制还是逃避。整张专辑第一次像一个会反问你们的东西。",
+    choices: [
+      {
+        id: "reopen_album_arc",
+        label: "重新调整整张专辑的弧线",
+        effects: [
+          { kind: "bandStat", key: "workQuality", amount: 3 },
+          { kind: "playerStat", key: "stress", amount: 4 },
+          { kind: "relationship", character: "vocal", amount: 1 },
+          { kind: "relationship", character: "bass", amount: -1 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "release",
+              title: "首专曲序返工",
+              description: "曲序定稿后又被重新拆开。你们开始明白，专辑不是把好歌排在一起那么简单。",
+              weight: 3,
+              tags: ["career", "album", "release", "songwriting"]
+            }
+          }
+        ],
+        feedback: {
+          title: "顺序被重新拆开",
+          body: "你们把便利贴又贴满整面墙。周航叹气说这很折磨，但他也承认，新的开头第一次像真正的开头。"
+        }
+      },
+      {
+        id: "trust_locked_sequence",
+        label: "相信已经定下的曲序",
+        effects: [
+          { kind: "playerStat", key: "stress", amount: -2 },
+          { kind: "bandStat", key: "cohesion", amount: 2 },
+          { kind: "bandStat", key: "reputation", amount: 1 },
+          { kind: "relationship", character: "drums", amount: 2 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "release",
+              title: "没有再拆开的曲序",
+              description: "你们决定不再把曲序推倒重来。第一次专辑需要判断，也需要停止修改的勇气。",
+              weight: 2,
+              tags: ["career", "album", "release", "trust"]
+            }
+          }
+        ],
+        feedback: {
+          title: "不再挪动",
+          body: "唐野把最后一张便利贴按回原位，说再改下去就不是更好，只是更晚。排练室终于安静下来。"
+        }
+      }
+    ]
+  },
+  {
+    id: "career.random.album_review_aftertaste",
+    title: "评论剪下来的那一句",
+    tags: ["career", "random", "album", "release", "media", "review", "aftermath"],
+    category: "random",
+    phase: "career",
+    careerStages: ["rising", "mature"],
+    rarity: "uncommon",
+    weight: 2,
+    cooldownMonths: 8,
+    repeatable: false,
+    priority: 38,
+    once: false,
+    trigger: {
+      flagsAll: ["campus.graduationShowDone", "album.firstReviewSeen"],
+      hasAlbum: true,
+      minReleaseCriticalScore: 65,
+      minReleaseSales: 1000
+    },
+    body: "那篇长评已经发了好几天，最刺眼的一句却一直被截图转发：他们知道自己想成为什么，但还不完全知道该舍弃什么。你们都说没有在意，但下一次写歌时，没有人能完全忘掉它。",
+    choices: [
+      {
+        id: "answer_review_with_next_song",
+        label: "用下一首歌回应这句评价",
+        effects: [
+          { kind: "bandStat", key: "workQuality", amount: 4 },
+          { kind: "bandStat", key: "reputation", amount: 3 },
+          { kind: "playerStat", key: "stress", amount: 3 },
+          { kind: "relationship", character: "vocal", amount: -1 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "release",
+              title: "首专评价后的回应",
+              description: "一篇长评里的句子被写进下一首歌的阴影里。外界的声音开始参与乐队的创作。",
+              weight: 3,
+              tags: ["career", "album", "review", "songwriting"]
+            }
+          }
+        ],
+        feedback: {
+          title: "那句话进了新歌",
+          body: "你把和弦写得更决绝。林夏说这首歌很好，但她不确定你是在回应听众，还是在和一个评论区争吵。"
+        }
+      },
+      {
+        id: "keep_review_outside_room",
+        label: "把评价留在排练室外",
+        effects: [
+          { kind: "playerStat", key: "stress", amount: -3 },
+          { kind: "bandStat", key: "cohesion", amount: 3 },
+          { kind: "bandStat", key: "fans", amount: 25 },
+          { kind: "relationship", character: "bass", amount: 2 },
+          {
+            kind: "addHistory",
+            entry: {
+              type: "release",
+              title: "首专评价没有改写排练",
+              description: "你们承认那篇评论准确，却没有把它变成下一首歌的指挥棒。",
+              weight: 2,
+              tags: ["career", "album", "review", "rehearsal"]
+            }
+          }
+        ],
+        feedback: {
+          title: "手机被扣下",
+          body: "周航把截图从群收藏里删掉。不是否认它刺得准，只是你们还想保留一点没人替你们命名的空间。"
+        }
+      }
+    ]
+  },
+  {
     id: "career.random.old_song_rights_talk",
     title: "旧歌版权谈判",
     tags: ["career", "random", "legacy", "contract", "catalog"],
