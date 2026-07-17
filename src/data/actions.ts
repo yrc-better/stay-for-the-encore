@@ -1,0 +1,166 @@
+import type { ActionContent } from "./types";
+
+export const ACTIONS = [
+  {
+    id: "personalTraining",
+    category: "personal",
+    label: "训练",
+    description: "独自练习，把这个月的注意力集中在自己的一项能力上。",
+    actionPoints: 1,
+    oncePerMonth: true,
+    targetPrompt: "选择主角的一项属性",
+    fixedEffectPreview: ["所选个人属性 +2"],
+    statePreview: "主角状态下降一级",
+  },
+  {
+    id: "social",
+    category: "personal",
+    label: "社交",
+    description: "去看演出、参加聚会或经营社交账号，认识圈内的新面孔。",
+    actionPoints: 1,
+    oncePerMonth: true,
+    fixedEffectPreview: ["主角热度 +1", "可能获得人脉标签或后续机会"],
+  },
+  {
+    id: "partTime",
+    category: "personal",
+    label: "兼职",
+    description: "接一份短期工作，为乐队的公共账户补充现金。",
+    actionPoints: 1,
+    oncePerMonth: true,
+    fixedEffectPreview: ["乐队资金 +¥3,000"],
+    statePreview: "主角状态下降一级",
+  },
+  {
+    id: "rest",
+    category: "personal",
+    label: "休息",
+    description: "暂时离开排练室，好好睡一觉，重新找回自己的节奏。",
+    actionPoints: 1,
+    oncePerMonth: true,
+    fixedEffectPreview: ["主角状态恢复两级"],
+  },
+  {
+    id: "bandTraining",
+    category: "band",
+    label: "训练",
+    description: "陪一名队友进行针对训练，帮助对方补强一项能力。",
+    actionPoints: 1,
+    oncePerMonth: true,
+    targetPrompt: "选择一名队友和一项属性",
+    fixedEffectPreview: ["所选队友的所选个人属性 +2"],
+    statePreview: "该队友状态下降一级",
+  },
+  {
+    id: "rehearsal",
+    category: "band",
+    label: "排练",
+    description: "五个人完整合奏，解决速度、进出段和配合上的问题。",
+    actionPoints: 1,
+    oncePerMonth: true,
+    fixedEffectPreview: ["全员专业 +1"],
+    statePreview: "全员状态下降一级；队友会在月末自然恢复一级",
+  },
+  {
+    id: "albumProduction",
+    category: "band",
+    label: "制作专辑",
+    description: "推进当前专辑；完成后，这个行动会切换为专辑发行。",
+    actionPoints: [1, 2],
+    oncePerMonth: true,
+    costOptions: [
+      {
+        id: "normal",
+        label: "普通制作",
+        actionPoints: 1,
+        effectPreview: "专辑进度 +10",
+      },
+      {
+        id: "focused",
+        label: "集中制作",
+        actionPoints: 2,
+        effectPreview: "专辑进度 +20",
+        statePreview: "全员状态下降一级",
+      },
+    ],
+    fixedEffectPreview: [
+      "创作与编曲阶段无需额外资金",
+      "录音阶段普通制作 ¥3,000，集中制作 ¥6,000",
+      "完成专辑阶段时全员创作或专业 +1",
+    ],
+    availabilityHint: "同一时间只能制作一张专辑",
+  },
+  {
+    id: "performance",
+    category: "band",
+    label: "演出",
+    description: "接受邀请或自主办演出，用现场换取报酬、人气与履历。",
+    actionPoints: [2, 3],
+    oncePerMonth: true,
+    costOptions: [
+      {
+        id: "regular",
+        label: "常规演出",
+        actionPoints: 2,
+        effectPreview: "按演出评价结算资金与人气",
+        statePreview: "全员状态下降一级",
+      },
+      {
+        id: "large",
+        label: "大型演出或巡演",
+        actionPoints: 3,
+        effectPreview: "按演出评价结算更高资金与人气",
+        statePreview: "全员状态下降两级",
+      },
+    ],
+    fixedEffectPreview: [
+      "达到“全场沸腾”或“传奇现场”时全员表现 +1",
+    ],
+    availabilityHint: "每月最多进行一场演出",
+  },
+  {
+    id: "promotion",
+    category: "band",
+    label: "宣传",
+    description: "拍摄物料、更新账号并联系媒体，让更多人知道乐队正在做什么。",
+    actionPoints: 1,
+    oncePerMonth: true,
+    costOptions: [
+      {
+        id: "standard",
+        label: "常规宣传",
+        actionPoints: 1,
+        money: 1000,
+        effectPreview: "全员热度 +1，乐队基础人气 +2",
+      },
+    ],
+    fixedEffectPreview: ["全员热度 +1", "乐队基础人气 +2"],
+  },
+  {
+    id: "teamBuilding",
+    category: "band",
+    label: "团建",
+    description: "五个人在排练之外待上一天，把没有说开的话留在饭桌上说完。",
+    actionPoints: 1,
+    oncePerMonth: true,
+    costOptions: [
+      {
+        id: "standard",
+        label: "一起放松",
+        actionPoints: 1,
+        money: 1000,
+        effectPreview: "全员归属感 +2",
+        statePreview: "全员状态恢复一级",
+      },
+    ],
+    fixedEffectPreview: ["全员归属感 +2", "全员状态恢复一级"],
+  },
+] as const satisfies readonly ActionContent[];
+
+export const PERSONAL_ACTIONS = ACTIONS.filter(
+  (action) => action.category === "personal",
+);
+
+export const BAND_ACTIONS = ACTIONS.filter(
+  (action) => action.category === "band",
+);

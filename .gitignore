@@ -1,5 +1,14 @@
 .superpowers/
 .worktrees/
-node_modules/
-dist/
+node_modules
+dist
+coverage
+playwright-report
+test-results
 .DS_Store
+*.log
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+.wrangler
+.dev.vars*

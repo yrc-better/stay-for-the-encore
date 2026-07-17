@@ -1,10 +1,16 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";
-import "./styles.css";
+import { App } from "./app/App";
+import { ErrorBoundary } from "./app/ErrorBoundary";
+import { assertValidContentCatalog } from "./data";
+import "./styles/global.css";
+
+assertValidContentCatalog();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>
 );

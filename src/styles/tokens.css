@@ -1,0 +1,98 @@
+:root {
+  color-scheme: dark;
+
+  --bb-font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei",
+    "Helvetica Neue", Arial, sans-serif;
+  --bb-font-mono: "SFMono-Regular", "Cascadia Code", "Roboto Mono",
+    Consolas, monospace;
+
+  --bb-color-canvas: #0c0f12;
+  --bb-color-canvas-raised: #11151a;
+  --bb-color-surface: #171c22;
+  --bb-color-surface-raised: #1d232a;
+  --bb-color-surface-inset: #101419;
+  --bb-color-surface-hover: #242b33;
+  --bb-color-border: #323a43;
+  --bb-color-border-strong: #4b555f;
+  --bb-color-text: #f0ede6;
+  --bb-color-text-muted: #b8b5ae;
+  --bb-color-text-subtle: #858b91;
+  --bb-color-text-disabled: #646a70;
+
+  --bb-color-accent: #ca6388;
+  --bb-color-accent-hover: #dd789c;
+  --bb-color-accent-contrast: #190f14;
+  --bb-color-accent-soft: rgb(202 99 136 / 14%);
+  --bb-color-accent-border: rgb(202 99 136 / 45%);
+
+  --bb-color-positive: #69b885;
+  --bb-color-positive-soft: rgb(105 184 133 / 13%);
+  --bb-color-positive-border: rgb(105 184 133 / 42%);
+  --bb-color-warning: #d5aa52;
+  --bb-color-warning-soft: rgb(213 170 82 / 14%);
+  --bb-color-warning-border: rgb(213 170 82 / 44%);
+  --bb-color-negative: #d4716c;
+  --bb-color-negative-soft: rgb(212 113 108 / 14%);
+  --bb-color-negative-border: rgb(212 113 108 / 44%);
+  --bb-color-info: #6ca8c8;
+  --bb-color-info-soft: rgb(108 168 200 / 14%);
+  --bb-color-info-border: rgb(108 168 200 / 42%);
+
+  --bb-space-1: 0.25rem;
+  --bb-space-2: 0.5rem;
+  --bb-space-3: 0.75rem;
+  --bb-space-4: 1rem;
+  --bb-space-5: 1.25rem;
+  --bb-space-6: 1.5rem;
+  --bb-space-8: 2rem;
+  --bb-space-10: 2.5rem;
+
+  --bb-radius-control: 0.5rem;
+  --bb-radius-panel: 0.625rem;
+  --bb-radius-pill: 999px;
+
+  --bb-shadow-panel: 0 18px 45px rgb(3 6 9 / 28%);
+  --bb-shadow-overlay: 0 24px 80px rgb(2 4 7 / 58%);
+  --bb-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 4%);
+
+  --bb-duration-fast: 120ms;
+  --bb-duration-normal: 200ms;
+  --bb-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --bb-z-sticky: 20;
+  --bb-z-overlay: 100;
+  --bb-z-dialog: 110;
+  --bb-z-toast: 120;
+}
+
+[data-genre="pop"] {
+  --bb-color-accent: #ca6388;
+  --bb-color-accent-hover: #dd789c;
+  --bb-color-accent-contrast: #190f14;
+  --bb-color-accent-soft: rgb(202 99 136 / 14%);
+  --bb-color-accent-border: rgb(202 99 136 / 45%);
+}
+
+[data-genre="indie"] {
+  --bb-color-accent: #58aaa7;
+  --bb-color-accent-hover: #6ebcb9;
+  --bb-color-accent-contrast: #091615;
+  --bb-color-accent-soft: rgb(88 170 167 / 14%);
+  --bb-color-accent-border: rgb(88 170 167 / 45%);
+}
+
+[data-genre="punk"] {
+  --bb-color-accent: #d0b344;
+  --bb-color-accent-hover: #e0c65b;
+  --bb-color-accent-contrast: #171407;
+  --bb-color-accent-soft: rgb(208 179 68 / 14%);
+  --bb-color-accent-border: rgb(208 179 68 / 48%);
+}
+
+[data-genre="metal"] {
+  --bb-color-accent: #b96360;
+  --bb-color-accent-hover: #cf7773;
+  --bb-color-accent-contrast: #180d0c;
+  --bb-color-accent-soft: rgb(185 99 96 / 14%);
+  --bb-color-accent-border: rgb(185 99 96 / 46%);
+}

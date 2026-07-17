@@ -1,0 +1,88 @@
+import type { GenreContent } from "./types";
+
+export const GENRES = [
+  {
+    id: "pop",
+    label: "流行",
+    englishLabel: "POP",
+    tagline: "让全世界都会唱。",
+    description:
+      "重视旋律、传播与舞台亲和力。更容易得到商业关注，但也更常面对形象和市场的拉扯。",
+    openingLine: "我们不仅要写好听的歌，还要让全世界都会唱。",
+    accentColor: "#E84F9B",
+    accentSoftColor: "#422039",
+    audienceTone: "抓耳、明亮、容易靠近",
+    hiddenModifiers: {
+      promotionPopularityBonus: 1,
+      albumCreationCheckBonus: 0,
+      albumArrangementPlayingBonus: 0,
+      performanceCheckBonus: 0,
+      performancePlayingBonus: 0,
+      commercialEventWeightMultiplier: 1.25,
+      negativeExtraWeightBonus: 0,
+    },
+  },
+  {
+    id: "indie",
+    label: "独立摇滚",
+    englishLabel: "INDIE ROCK",
+    tagline: "从一间排练室开始。",
+    description:
+      "看重原创表达与长期口碑。成长通常慢一些，但作品更容易留下属于乐队自己的轮廓。",
+    openingLine: "没有资源，没有背景，只有一间排练室和几首没人听过的歌。",
+    accentColor: "#44B8AF",
+    accentSoftColor: "#183B3D",
+    audienceTone: "真诚、克制、耐人回味",
+    hiddenModifiers: {
+      promotionPopularityBonus: 0,
+      albumCreationCheckBonus: 4,
+      albumArrangementPlayingBonus: 0,
+      performanceCheckBonus: 0,
+      performancePlayingBonus: 0,
+      commercialEventWeightMultiplier: 0.85,
+      negativeExtraWeightBonus: 0,
+    },
+  },
+  {
+    id: "punk",
+    label: "朋克",
+    englishLabel: "PUNK",
+    tagline: "先把舞台点燃。",
+    description:
+      "直接、快速、拒绝循规蹈矩。现场更容易爆发，也更容易把意外变成故事。",
+    openingLine: "不会弹得很复杂没关系，先把舞台点燃再说。",
+    accentColor: "#F2D230",
+    accentSoftColor: "#403817",
+    audienceTone: "粗粝、直接、失控边缘",
+    hiddenModifiers: {
+      promotionPopularityBonus: 0,
+      albumCreationCheckBonus: 0,
+      albumArrangementPlayingBonus: 0,
+      performanceCheckBonus: 4,
+      performancePlayingBonus: 0,
+      commercialEventWeightMultiplier: 1,
+      negativeExtraWeightBonus: 0.05,
+    },
+  },
+  {
+    id: "metal",
+    label: "金属",
+    englishLabel: "METAL",
+    tagline: "更快、更重、更精确。",
+    description:
+      "依靠演奏、编排和力量感征服观众。作品需要耐心打磨，技术积累会在舞台上得到回报。",
+    openingLine: "更快、更重、更复杂，直到所有人都记住我们的名字。",
+    accentColor: "#C64949",
+    accentSoftColor: "#3A2022",
+    audienceTone: "沉重、精密、充满压迫感",
+    hiddenModifiers: {
+      promotionPopularityBonus: 0,
+      albumCreationCheckBonus: 0,
+      albumArrangementPlayingBonus: 4,
+      performanceCheckBonus: 0,
+      performancePlayingBonus: 4,
+      commercialEventWeightMultiplier: 1,
+      negativeExtraWeightBonus: 0,
+    },
+  },
+] as const satisfies readonly GenreContent[];
