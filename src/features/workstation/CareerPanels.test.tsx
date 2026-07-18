@@ -76,10 +76,29 @@ describe("生涯演出与经营面板", () => {
       />,
     );
 
-    expect(screen.getByText("五级场地路线")).toBeInTheDocument();
-    expect(screen.getByText("大型巡演与万人场馆")).toBeInTheDocument();
+    expect(screen.queryByText("五级场地路线")).not.toBeInTheDocument();
+    expect(screen.queryByText("大型巡演与万人场馆")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "解锁场地" }),
+    ).toBeInTheDocument();
     expect(screen.getAllByText("当前计划风险").length).toBeGreaterThan(1);
     expect(screen.getByText("校园礼堂演出")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "解锁场地" }));
+
+    expect(
+      screen.getByRole("dialog", { name: "五级场地路线" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("大型巡演与万人场馆")).toBeInTheDocument();
+    expect(screen.getAllByText("已永久解锁")).toHaveLength(3);
+    expect(screen.getAllByText("尚未解锁")).toHaveLength(2);
+
+    await user.click(
+      screen.getByRole("button", { name: "关闭场地路线" }),
+    );
+    expect(
+      screen.queryByRole("dialog", { name: "五级场地路线" }),
+    ).not.toBeInTheDocument();
 
     await user.click(
       screen.getByRole("button", {

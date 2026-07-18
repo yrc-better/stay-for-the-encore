@@ -17,7 +17,13 @@ import {
   XCircleIcon,
 } from "@phosphor-icons/react";
 import { useState, type ReactNode } from "react";
-import { ArtworkImage, Button, Panel, StatusBadge } from "../../components";
+import {
+  ArtworkImage,
+  Button,
+  Dialog,
+  Panel,
+  StatusBadge,
+} from "../../components";
 import { VENUE_ARTWORK } from "../../data/artwork";
 import {
   CAREER_VENUE_LEVELS,
@@ -195,6 +201,7 @@ export function CareerPerformancePanel({
   onPerform,
   onMessage,
 }: CareerPerformancePanelProps) {
+  const [venueRouteOpen, setVenueRouteOpen] = useState(false);
   const currentMonth = selectAbsoluteMonth(game);
   const attributes = selectBandAttributes(game);
   const roundedPopularity = Math.round(attributes.popularity);
@@ -231,9 +238,96 @@ export function CareerPerformancePanel({
           <StatusBadge tone="accent">
             已解锁 {game.band.unlockedVenueLevel} 级场地
           </StatusBadge>
-          <span>综合人气 {roundedPopularity}</span>
+          <span className="career-page-heading__popularity">
+            综合人气 {roundedPopularity}
+          </span>
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={
+              <MapPinIcon size={16} weight="bold" aria-hidden="true" />
+            }
+            onClick={() => setVenueRouteOpen(true)}
+          >
+            解锁场地
+          </Button>
         </div>
       </header>
+
+      <Dialog
+        open={venueRouteOpen}
+        onClose={() => setVenueRouteOpen(false)}
+        title="五级场地路线"
+        description="满足对应条件后，场地会在月结算时永久解锁。"
+        size="lg"
+        closeLabel="关闭场地路线"
+      >
+        <div
+          className="career-route-dialog__content"
+          data-genre={game.band.genre}
+        >
+          <ol className="career-route">
+            {CAREER_VENUE_LEVELS.map((venue) => {
+              const unlocked = venue.level <= game.band.unlockedVenueLevel;
+              const milestoneMet =
+                venue.unlock.requiredExcellentPerformanceLevel === null ||
+                (venue.unlock.requiredExcellentPerformanceLevel === 3
+                  ? game.performanceMilestones.excellentLevel3
+                  : game.performanceMilestones.excellentLevel4);
+
+              return (
+                <li
+                  className="career-route__stop"
+                  data-unlocked={unlocked}
+                  key={venue.id}
+                >
+                  <div className="career-route__marker">
+                    <span>{venue.level}</span>
+                  </div>
+                  <ArtworkImage
+                    artwork={VENUE_ARTWORK[venue.level]}
+                    className="career-venue-art career-venue-art--route"
+                    decorative
+                    sizes="(max-width: 48rem) calc(100vw - 7rem), 128px"
+                  />
+                  <div className="career-route__content">
+                    <div>
+                      <h4>{venue.name}</h4>
+                      <StatusBadge tone={unlocked ? "positive" : "neutral"}>
+                        {unlocked ? "已永久解锁" : "尚未解锁"}
+                      </StatusBadge>
+                    </div>
+                    <p>{venue.unlock.description}</p>
+                    <ul className="career-conditions">
+                      <RouteCondition
+                        met={roundedPopularity >= venue.unlock.minPopularity}
+                      >
+                        综合人气 {venue.unlock.minPopularity}
+                      </RouteCondition>
+                      <RouteCondition
+                        met={
+                          game.releasedAlbums.length >=
+                          venue.unlock.minReleasedAlbums
+                        }
+                      >
+                        已发行专辑 {venue.unlock.minReleasedAlbums} 张
+                      </RouteCondition>
+                      {venue.unlock.requiredExcellentPerformanceLevel !==
+                        null && (
+                        <RouteCondition met={milestoneMet}>
+                          优秀
+                          {venue.unlock.requiredExcellentPerformanceLevel}
+                          级演出里程碑
+                        </RouteCondition>
+                      )}
+                    </ul>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </Dialog>
 
       <section aria-labelledby="career-invitations-title">
         <div className="career-section-heading">
@@ -341,74 +435,6 @@ export function CareerPerformancePanel({
           </div>
         )}
       </section>
-
-      <Panel
-        title="五级场地路线"
-        eyebrow="VENUE LADDER"
-        description="场地解锁永久保留。当前条件用于解释下一阶段还缺少什么。"
-        accent
-        bodyClassName="career-route-panel"
-      >
-        <ol className="career-route">
-          {CAREER_VENUE_LEVELS.map((venue) => {
-            const unlocked = venue.level <= game.band.unlockedVenueLevel;
-            const milestoneMet =
-              venue.unlock.requiredExcellentPerformanceLevel === null ||
-              (venue.unlock.requiredExcellentPerformanceLevel === 3
-                ? game.performanceMilestones.excellentLevel3
-                : game.performanceMilestones.excellentLevel4);
-
-            return (
-              <li
-                className="career-route__stop"
-                data-unlocked={unlocked}
-                key={venue.id}
-              >
-                <div className="career-route__marker">
-                  <span>{venue.level}</span>
-                </div>
-                <ArtworkImage
-                  artwork={VENUE_ARTWORK[venue.level]}
-                  className="career-venue-art career-venue-art--route"
-                  decorative
-                  sizes="(max-width: 48rem) calc(100vw - 7rem), 128px"
-                />
-                <div className="career-route__content">
-                  <div>
-                    <h4>{venue.name}</h4>
-                    <StatusBadge tone={unlocked ? "positive" : "neutral"}>
-                      {unlocked ? "已永久解锁" : "尚未解锁"}
-                    </StatusBadge>
-                  </div>
-                  <p>{venue.unlock.description}</p>
-                  <ul className="career-conditions">
-                    <RouteCondition
-                      met={roundedPopularity >= venue.unlock.minPopularity}
-                    >
-                      综合人气 {venue.unlock.minPopularity}
-                    </RouteCondition>
-                    <RouteCondition
-                      met={
-                        game.releasedAlbums.length >=
-                        venue.unlock.minReleasedAlbums
-                      }
-                    >
-                      已发行专辑 {venue.unlock.minReleasedAlbums} 张
-                    </RouteCondition>
-                    {venue.unlock.requiredExcellentPerformanceLevel !== null && (
-                      <RouteCondition met={milestoneMet}>
-                        优秀
-                        {venue.unlock.requiredExcellentPerformanceLevel}
-                        级演出里程碑
-                      </RouteCondition>
-                    )}
-                  </ul>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      </Panel>
 
       <section aria-labelledby="career-self-hosted-title">
         <div className="career-section-heading">

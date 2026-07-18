@@ -64,7 +64,7 @@
   gap: var(--bb-space-2);
 }
 
-.career-page-heading__status > span:last-child,
+.career-page-heading__popularity,
 .career-section-note {
   color: var(--bb-color-text-subtle);
   font-size: 0.76rem;
@@ -322,8 +322,8 @@
   line-height: 1.5;
 }
 
-.career-route-panel {
-  padding-block: var(--bb-space-4);
+.career-route-dialog__content {
+  min-width: 0;
 }
 
 .career-route {
@@ -826,6 +826,12 @@
   .career-venue-art--route {
     width: 100%;
     aspect-ratio: 16 / 7;
+  }
+
+  .career-route__content > div:first-child {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--bb-space-2);
   }
 
   .career-performance-history__numbers {
