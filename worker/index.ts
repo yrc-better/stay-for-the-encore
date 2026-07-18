@@ -1,19 +1,12 @@
 import {
   createFeedbackHandler,
-  type FeedbackD1Database,
   type FeedbackEnv,
 } from "./feedback";
 
-interface Env {
+interface Env extends FeedbackEnv {
   ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
-  DB?: FeedbackD1Database;
-  RESEND_API_KEY?: string;
-  FEEDBACK_TO_EMAIL?: string;
-  FEEDBACK_FROM_EMAIL?: string;
-  FEEDBACK_RATE_LIMIT_SECRET?: string;
-  FEEDBACK_DAILY_LIMIT?: string;
 }
 
 const handleFeedbackRequest = createFeedbackHandler();

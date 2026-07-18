@@ -1,4 +1,5 @@
 import type { EventContent, EventPool, GenreId, PortraitResource } from "./types";
+import { resolvePublicPath } from "../config/runtime";
 
 export interface ArtworkResource {
   src: string;
@@ -13,16 +14,30 @@ export interface ArtworkResource {
 const webpVariant = (src: string, width: 256 | 512): string =>
   src.replace(/\.webp$/u, `-${width}.webp`);
 
+const artworkPath = (path: string): string => resolvePublicPath(path);
+
+const webpSrcSet = (
+  src: string,
+  variants: readonly (256 | 512)[],
+  originalWidth: 1024 | 1536,
+): string =>
+  [
+    ...variants.map((width) => `${webpVariant(src, width)} ${width}w`),
+    `${src} ${originalWidth}w`,
+  ].join(", ");
+
 export function portraitArtwork(
   portrait: PortraitResource,
   sizes = "(max-width: 720px) 44vw, 160px",
 ): ArtworkResource {
+  const src = artworkPath(portrait.futureAssetPath);
+
   return {
-    src: portrait.futureAssetPath,
+    src,
     alt: portrait.alt,
     width: 1024,
     height: 1024,
-    srcSet: `${webpVariant(portrait.futureAssetPath, 256)} 256w, ${webpVariant(portrait.futureAssetPath, 512)} 512w, ${portrait.futureAssetPath} 1024w`,
+    srcSet: webpSrcSet(src, [256, 512], 1024),
     sizes,
     focalPoint: "50% 36%",
   };
@@ -30,42 +45,54 @@ export function portraitArtwork(
 
 export const LEGACY_PORTRAITS = {
   "legacy-lin-xia": {
-    src: "/assets/portraits/legacy/legacy-lin-xia.webp",
+    src: artworkPath("/assets/portraits/legacy/legacy-lin-xia.webp"),
     alt: "玫红线稿绘制的短发青年林夏头像",
     width: 1024,
     height: 1024,
-    srcSet:
-      "/assets/portraits/legacy/legacy-lin-xia-256.webp 256w, /assets/portraits/legacy/legacy-lin-xia-512.webp 512w, /assets/portraits/legacy/legacy-lin-xia.webp 1024w",
+    srcSet: webpSrcSet(
+      artworkPath("/assets/portraits/legacy/legacy-lin-xia.webp"),
+      [256, 512],
+      1024,
+    ),
     sizes: "64px",
     focalPoint: "50% 36%",
   },
   "legacy-zhou-hang": {
-    src: "/assets/portraits/legacy/legacy-zhou-hang.webp",
+    src: artworkPath("/assets/portraits/legacy/legacy-zhou-hang.webp"),
     alt: "青色线稿绘制的蓬松短发青年周航头像",
     width: 1024,
     height: 1024,
-    srcSet:
-      "/assets/portraits/legacy/legacy-zhou-hang-256.webp 256w, /assets/portraits/legacy/legacy-zhou-hang-512.webp 512w, /assets/portraits/legacy/legacy-zhou-hang.webp 1024w",
+    srcSet: webpSrcSet(
+      artworkPath("/assets/portraits/legacy/legacy-zhou-hang.webp"),
+      [256, 512],
+      1024,
+    ),
     sizes: "64px",
     focalPoint: "50% 36%",
   },
   "legacy-tang-ye": {
-    src: "/assets/portraits/legacy/legacy-tang-ye.webp",
+    src: artworkPath("/assets/portraits/legacy/legacy-tang-ye.webp"),
     alt: "琥珀线稿绘制的卷发青年唐野头像",
     width: 1024,
     height: 1024,
-    srcSet:
-      "/assets/portraits/legacy/legacy-tang-ye-256.webp 256w, /assets/portraits/legacy/legacy-tang-ye-512.webp 512w, /assets/portraits/legacy/legacy-tang-ye.webp 1024w",
+    srcSet: webpSrcSet(
+      artworkPath("/assets/portraits/legacy/legacy-tang-ye.webp"),
+      [256, 512],
+      1024,
+    ),
     sizes: "64px",
     focalPoint: "50% 36%",
   },
   "legacy-keyboard": {
-    src: "/assets/portraits/legacy/legacy-keyboard.webp",
+    src: artworkPath("/assets/portraits/legacy/legacy-keyboard.webp"),
     alt: "紫色线稿绘制的长发青年许澄头像",
     width: 1024,
     height: 1024,
-    srcSet:
-      "/assets/portraits/legacy/legacy-keyboard-256.webp 256w, /assets/portraits/legacy/legacy-keyboard-512.webp 512w, /assets/portraits/legacy/legacy-keyboard.webp 1024w",
+    srcSet: webpSrcSet(
+      artworkPath("/assets/portraits/legacy/legacy-keyboard.webp"),
+      [256, 512],
+      1024,
+    ),
     sizes: "64px",
     focalPoint: "50% 36%",
   },
@@ -97,7 +124,7 @@ export const ALBUM_COVERS = Object.fromEntries(
   GENRE_IDS.flatMap((genre) =>
     ALBUM_COVER_VARIANTS.map(({ id: variant, label }) => {
       const coverId: AlbumCoverId = `${genre}-${variant}`;
-      const src = `/assets/albums/${genre}/${variant}.webp`;
+      const src = artworkPath(`/assets/albums/${genre}/${variant}.webp`);
       return [
         coverId,
         {
@@ -105,7 +132,7 @@ export const ALBUM_COVERS = Object.fromEntries(
           alt: `${GENRE_LABELS[genre]}风格的${label}无字专辑封面`,
           width: 1024,
           height: 1024,
-          srcSet: `${webpVariant(src, 256)} 256w, ${webpVariant(src, 512)} 512w, ${src} 1024w`,
+          srcSet: webpSrcSet(src, [256, 512], 1024),
           sizes: "(max-width: 720px) 42vw, 220px",
           focalPoint: "50% 50%",
         } satisfies ArtworkResource,
@@ -124,7 +151,7 @@ export function resolveAlbumCover(
 
 export const GENRE_ARTWORK = Object.fromEntries(
   GENRE_IDS.map((genre) => {
-    const src = `/assets/illustrations/genres/${genre}.webp`;
+    const src = artworkPath(`/assets/illustrations/genres/${genre}.webp`);
     return [
       genre,
       {
@@ -132,7 +159,7 @@ export const GENRE_ARTWORK = Object.fromEntries(
         alt: `${GENRE_LABELS[genre]}乐队气质的舞台摄影`,
         width: 1536,
         height: 1024,
-        srcSet: `${webpVariant(src, 512)} 512w, ${src} 1536w`,
+        srcSet: webpSrcSet(src, [512], 1536),
         sizes: "(max-width: 720px) 88vw, 420px",
         focalPoint: "50% 50%",
       } satisfies ArtworkResource,
@@ -142,22 +169,28 @@ export const GENRE_ARTWORK = Object.fromEntries(
 
 export const OPENING_ARTWORK = {
   graduationNight: {
-    src: "/assets/illustrations/opening/graduation-night.webp",
+    src: artworkPath("/assets/illustrations/opening/graduation-night.webp"),
     alt: "毕业典礼上同学们把学位帽抛向空中的瞬间",
     width: 1536,
     height: 1024,
-    srcSet:
-      "/assets/illustrations/opening/graduation-night-512.webp 512w, /assets/illustrations/opening/graduation-night.webp 1536w",
+    srcSet: webpSrcSet(
+      artworkPath("/assets/illustrations/opening/graduation-night.webp"),
+      [512],
+      1536,
+    ),
     sizes: "(max-width: 720px) 92vw, 720px",
     focalPoint: "58% 48%",
   },
   firstRehearsal: {
-    src: "/assets/illustrations/opening/first-rehearsal.webp",
+    src: artworkPath("/assets/illustrations/opening/first-rehearsal.webp"),
     alt: "紫色霓虹灯下正在合奏的五人乐队",
     width: 1536,
     height: 1024,
-    srcSet:
-      "/assets/illustrations/opening/first-rehearsal-512.webp 512w, /assets/illustrations/opening/first-rehearsal.webp 1536w",
+    srcSet: webpSrcSet(
+      artworkPath("/assets/illustrations/opening/first-rehearsal.webp"),
+      [512],
+      1536,
+    ),
     sizes: "(max-width: 720px) 92vw, 720px",
     focalPoint: "50% 52%",
   },
@@ -165,8 +198,12 @@ export const OPENING_ARTWORK = {
 
 export const EVENT_POOL_ARTWORK: Readonly<Record<EventPool, ArtworkResource>> = {
   member: {
-    src: "/assets/events/pools/member.webp",
-    srcSet: "/assets/events/pools/member-512.webp 512w, /assets/events/pools/member.webp 1536w",
+    src: artworkPath("/assets/events/pools/member.webp"),
+    srcSet: webpSrcSet(
+      artworkPath("/assets/events/pools/member.webp"),
+      [512],
+      1536,
+    ),
     sizes: "(max-width: 720px) 92vw, 640px",
     alt: "深夜排练室里围绕新旋律讨论的乐队成员",
     width: 1536,
@@ -174,8 +211,12 @@ export const EVENT_POOL_ARTWORK: Readonly<Record<EventPool, ArtworkResource>> = 
     focalPoint: "50% 48%",
   },
   album: {
-    src: "/assets/events/pools/album.webp",
-    srcSet: "/assets/events/pools/album-512.webp 512w, /assets/events/pools/album.webp 1536w",
+    src: artworkPath("/assets/events/pools/album.webp"),
+    srcSet: webpSrcSet(
+      artworkPath("/assets/events/pools/album.webp"),
+      [512],
+      1536,
+    ),
     sizes: "(max-width: 720px) 92vw, 640px",
     alt: "铺满歌词纸和录音设备的专辑制作台",
     width: 1536,
@@ -183,8 +224,12 @@ export const EVENT_POOL_ARTWORK: Readonly<Record<EventPool, ArtworkResource>> = 
     focalPoint: "50% 52%",
   },
   performance: {
-    src: "/assets/events/pools/performance.webp",
-    srcSet: "/assets/events/pools/performance-512.webp 512w, /assets/events/pools/performance.webp 1536w",
+    src: artworkPath("/assets/events/pools/performance.webp"),
+    srcSet: webpSrcSet(
+      artworkPath("/assets/events/pools/performance.webp"),
+      [512],
+      1536,
+    ),
     sizes: "(max-width: 720px) 92vw, 640px",
     alt: "演出开始前被舞台灯照亮的空舞台",
     width: 1536,
@@ -192,8 +237,12 @@ export const EVENT_POOL_ARTWORK: Readonly<Record<EventPool, ArtworkResource>> = 
     focalPoint: "50% 50%",
   },
   equipment: {
-    src: "/assets/events/pools/equipment.webp",
-    srcSet: "/assets/events/pools/equipment-512.webp 512w, /assets/events/pools/equipment.webp 1536w",
+    src: artworkPath("/assets/events/pools/equipment.webp"),
+    srcSet: webpSrcSet(
+      artworkPath("/assets/events/pools/equipment.webp"),
+      [512],
+      1536,
+    ),
     sizes: "(max-width: 720px) 92vw, 640px",
     alt: "排练室地面上的效果器、线材和工具箱",
     width: 1536,
@@ -201,8 +250,12 @@ export const EVENT_POOL_ARTWORK: Readonly<Record<EventPool, ArtworkResource>> = 
     focalPoint: "50% 58%",
   },
   publicOpinion: {
-    src: "/assets/events/pools/public-opinion.webp",
-    srcSet: "/assets/events/pools/public-opinion-512.webp 512w, /assets/events/pools/public-opinion.webp 1536w",
+    src: artworkPath("/assets/events/pools/public-opinion.webp"),
+    srcSet: webpSrcSet(
+      artworkPath("/assets/events/pools/public-opinion.webp"),
+      [512],
+      1536,
+    ),
     sizes: "(max-width: 720px) 92vw, 640px",
     alt: "手机屏幕光映照着散落的乐队评论和海报",
     width: 1536,
@@ -210,8 +263,12 @@ export const EVENT_POOL_ARTWORK: Readonly<Record<EventPool, ArtworkResource>> = 
     focalPoint: "50% 50%",
   },
   industry: {
-    src: "/assets/events/pools/industry.webp",
-    srcSet: "/assets/events/pools/industry-512.webp 512w, /assets/events/pools/industry.webp 1536w",
+    src: artworkPath("/assets/events/pools/industry.webp"),
+    srcSet: webpSrcSet(
+      artworkPath("/assets/events/pools/industry.webp"),
+      [512],
+      1536,
+    ),
     sizes: "(max-width: 720px) 92vw, 640px",
     alt: "音乐行业会面桌上的耳机、文件和试听设备",
     width: 1536,
@@ -219,8 +276,12 @@ export const EVENT_POOL_ARTWORK: Readonly<Record<EventPool, ArtworkResource>> = 
     focalPoint: "50% 50%",
   },
   life: {
-    src: "/assets/events/pools/life.webp",
-    srcSet: "/assets/events/pools/life-512.webp 512w, /assets/events/pools/life.webp 1536w",
+    src: artworkPath("/assets/events/pools/life.webp"),
+    srcSet: webpSrcSet(
+      artworkPath("/assets/events/pools/life.webp"),
+      [512],
+      1536,
+    ),
     sizes: "(max-width: 720px) 92vw, 640px",
     alt: "城市雨夜里背着乐器赶往排练的身影",
     width: 1536,
@@ -228,8 +289,12 @@ export const EVENT_POOL_ARTWORK: Readonly<Record<EventPool, ArtworkResource>> = 
     focalPoint: "56% 46%",
   },
   genre: {
-    src: "/assets/events/pools/genre.webp",
-    srcSet: "/assets/events/pools/genre-512.webp 512w, /assets/events/pools/genre.webp 1536w",
+    src: artworkPath("/assets/events/pools/genre.webp"),
+    srcSet: webpSrcSet(
+      artworkPath("/assets/events/pools/genre.webp"),
+      [512],
+      1536,
+    ),
     sizes: "(max-width: 720px) 92vw, 640px",
     alt: "四束不同色彩的舞台灯交汇在乐器上",
     width: 1536,
@@ -275,9 +340,11 @@ export function resolveEventArtwork(
   if (!SPECIAL_EVENT_IDS.has(event.id)) {
     return EVENT_POOL_ARTWORK[event.pool];
   }
+  const src = artworkPath(`/assets/events/special/${event.id}.webp`);
+
   return {
-    src: `/assets/events/special/${event.id}.webp`,
-    srcSet: `/assets/events/special/${event.id}-512.webp 512w, /assets/events/special/${event.id}.webp 1536w`,
+    src,
+    srcSet: webpSrcSet(src, [512], 1536),
     sizes: "(max-width: 720px) 92vw, 640px",
     alt: `事件“${event.title}”的情境插图`,
     width: 1536,
@@ -287,18 +354,22 @@ export function resolveEventArtwork(
 }
 
 export const VENUE_ARTWORK = Object.fromEntries(
-  ([1, 2, 3, 4, 5] as const).map((level) => [
-    level,
-    {
-      src: `/assets/venues/level-${level}.webp`,
-      srcSet: `/assets/venues/level-${level}-512.webp 512w, /assets/venues/level-${level}.webp 1536w`,
-      sizes: "(max-width: 720px) 86vw, 420px",
-      alt: `${level}级演出场地场景`,
-      width: 1536,
-      height: 960,
-      focalPoint: "50% 50%",
-    } satisfies ArtworkResource,
-  ]),
+  ([1, 2, 3, 4, 5] as const).map((level) => {
+    const src = artworkPath(`/assets/venues/level-${level}.webp`);
+
+    return [
+      level,
+      {
+        src,
+        srcSet: webpSrcSet(src, [512], 1536),
+        sizes: "(max-width: 720px) 86vw, 420px",
+        alt: `${level}级演出场地场景`,
+        width: 1536,
+        height: 960,
+        focalPoint: "50% 50%",
+      } satisfies ArtworkResource,
+    ];
+  }),
 ) as Readonly<Record<1 | 2 | 3 | 4 | 5, ArtworkResource>>;
 
 export const ENDING_ARTWORK = {
@@ -347,9 +418,11 @@ export function resolveEndingArtwork(title: string): ArtworkResource {
     Object.hasOwn(ENDING_ARTWORK, title)
       ? ENDING_ARTWORK[title as EndingArtworkTitle]
       : ENDING_ARTWORK.自己的声音;
+  const src = artworkPath(`/assets/endings/${entry.slug}.webp`);
+
   return {
-    src: `/assets/endings/${entry.slug}.webp`,
-    srcSet: `/assets/endings/${entry.slug}-512.webp 512w, /assets/endings/${entry.slug}.webp 1536w`,
+    src,
+    srcSet: webpSrcSet(src, [512], 1536),
     sizes: "(max-width: 720px) 100vw, 1100px",
     alt: entry.alt,
     width: 1536,

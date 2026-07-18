@@ -109,6 +109,115 @@ describe("游戏反馈接口", () => {
       {},
     );
     expect(crossOriginResponse.status).toBe(403);
+    expect(
+      crossOriginResponse.headers.get("Access-Control-Allow-Origin"),
+    ).toBeNull();
+    expect(crossOriginResponse.headers.get("Vary")).toContain("Origin");
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("仅允许环境变量中精确匹配的博客来源并为所有响应添加 CORS 头", async () => {
+    const sendEmail = vi.fn().mockResolvedValue(true);
+    const handleFeedback = createFeedbackHandler({
+      rateLimit: allowRateLimit,
+      sendEmail,
+    });
+    const env = {
+      FEEDBACK_ALLOWED_ORIGINS:
+        "https://preview.example, https://blog.yrc-bot.xyz",
+    };
+
+    const response = await handleFeedback(
+      createRequest(validSubmission, {
+        Origin: "https://blog.yrc-bot.xyz",
+      }),
+      env,
+    );
+
+    expect(response.status).toBe(202);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://blog.yrc-bot.xyz",
+    );
+    expect(response.headers.get("Vary")).toContain("Origin");
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+
+    const invalidResponse = await handleFeedback(
+      createRequest(
+        { ...validSubmission, message: "太短" },
+        { Origin: "https://blog.yrc-bot.xyz" },
+      ),
+      env,
+    );
+
+    expect(invalidResponse.status).toBe(400);
+    expect(invalidResponse.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://blog.yrc-bot.xyz",
+    );
+    expect(invalidResponse.headers.get("Vary")).toContain("Origin");
+
+    const lookalikeResponse = await handleFeedback(
+      createRequest(validSubmission, {
+        Origin: "https://blog.yrc-bot.xyz.attacker.example",
+      }),
+      env,
+    );
+
+    expect(lookalikeResponse.status).toBe(403);
+    expect(
+      lookalikeResponse.headers.get("Access-Control-Allow-Origin"),
+    ).toBeNull();
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it("仅为白名单来源处理反馈预检", async () => {
+    const sendEmail = vi.fn().mockResolvedValue(true);
+    const rateLimit = vi.fn(allowRateLimit);
+    const handleFeedback = createFeedbackHandler({
+      rateLimit,
+      sendEmail,
+    });
+    const env = {
+      FEEDBACK_ALLOWED_ORIGINS: "https://blog.yrc-bot.xyz",
+    };
+    const createPreflight = (origin: string) =>
+      new Request("https://game.example/api/feedback", {
+        method: "OPTIONS",
+        headers: {
+          Origin: origin,
+          "Access-Control-Request-Method": "POST",
+          "Access-Control-Request-Headers": "Content-Type",
+        },
+      });
+
+    const response = await handleFeedback(
+      createPreflight("https://blog.yrc-bot.xyz"),
+      env,
+    );
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://blog.yrc-bot.xyz",
+    );
+    expect(response.headers.get("Access-Control-Allow-Methods")).toBe(
+      "POST, OPTIONS",
+    );
+    expect(response.headers.get("Access-Control-Allow-Headers")).toBe(
+      "Content-Type",
+    );
+    expect(response.headers.get("Access-Control-Max-Age")).toBe("86400");
+    expect(response.headers.get("Vary")).toContain("Origin");
+
+    const deniedResponse = await handleFeedback(
+      createPreflight("https://attacker.example"),
+      env,
+    );
+
+    expect(deniedResponse.status).toBe(403);
+    expect(
+      deniedResponse.headers.get("Access-Control-Allow-Origin"),
+    ).toBeNull();
+    expect(deniedResponse.headers.get("Vary")).toContain("Origin");
+    expect(rateLimit).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
@@ -182,6 +291,47 @@ describe("游戏反馈接口", () => {
     expect(existingIdentityStatement.bind).toHaveBeenCalledWith(
       expect.stringMatching(/^[a-f0-9]{64}$/),
     );
+  });
+
+  it("有 Cloudflare IP 时不会因客户端更换身份头而绕过限流键", async () => {
+    const schemaStatement = createStatement();
+    const existingIdentityStatement = createStatement({
+      windowStartedAt: 1_000,
+      requestCount: 3,
+      dailyCount: 3,
+    });
+    const prepare = vi.fn((query: string) =>
+      query.includes("SELECT") &&
+      query.includes("FROM feedback_rate_limits")
+        ? existingIdentityStatement
+        : schemaStatement,
+    );
+    const database = { prepare } as FeedbackD1Database;
+    const env = {
+      DB: database,
+      FEEDBACK_RATE_LIMIT_SECRET: "test-rate-limit-secret-32-bytes",
+    };
+
+    await checkPersistentRateLimit(
+      createRequest(validSubmission, {
+        "oai-authenticated-user-email": "first@example.com",
+      }),
+      env,
+      1_000,
+    );
+    await checkPersistentRateLimit(
+      createRequest(validSubmission, {
+        "oai-authenticated-user-email": "second@example.com",
+      }),
+      env,
+      1_000,
+    );
+
+    const boundKeys = existingIdentityStatement.bind.mock.calls.map(
+      ([key]) => key,
+    );
+    expect(boundKeys).toHaveLength(2);
+    expect(boundKeys[0]).toBe(boundKeys[1]);
   });
 
   it("全站每日邮件预算耗尽后不再执行写入", async () => {

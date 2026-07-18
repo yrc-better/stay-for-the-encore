@@ -17,6 +17,7 @@ import {
   Panel,
   StatusBadge,
 } from "../components";
+import { resolvePublicPath } from "../config/runtime";
 import { OPENING_ARTWORK } from "../data";
 import type { ExportResult, SaveResult } from "../persistence";
 
@@ -217,7 +218,11 @@ export function HomeScreen({
           {saveMessage && <p className="home-save-tools__message">{saveMessage}</p>}
           <p className="home-credits">
             角色手绘与摄影素材均已按许可使用。
-            <a href="/credits.html" target="_blank" rel="noreferrer">
+            <a
+              href={resolvePublicPath("/credits.html")}
+              target="_blank"
+              rel="noreferrer"
+            >
               查看素材来源与许可
             </a>
           </p>

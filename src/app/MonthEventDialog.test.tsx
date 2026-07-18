@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
+import { resolvePublicPath } from "../config/runtime";
 import { prepareMonthEvent } from "../domain";
 import { useGameStore } from "../store";
 import { createTestGame } from "../test/fixtures";
@@ -47,7 +48,9 @@ describe("月初事件弹窗", () => {
       screen.getByRole("dialog", { name: "暴雨中的排练日" }),
     ).toBeInTheDocument();
     expect(
-      document.querySelector('img[src="/assets/events/pools/life.webp"]'),
+      document.querySelector(
+        `img[src="${resolvePublicPath("/assets/events/pools/life.webp")}"]`,
+      ),
     ).toBeInTheDocument();
     expect(screen.queryByText(/归属感 \+1/)).not.toBeInTheDocument();
 

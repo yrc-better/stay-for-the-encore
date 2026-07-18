@@ -46,6 +46,7 @@ export interface FeedbackEnv {
   FEEDBACK_FROM_EMAIL?: string;
   FEEDBACK_RATE_LIMIT_SECRET?: string;
   FEEDBACK_DAILY_LIMIT?: string;
+  FEEDBACK_ALLOWED_ORIGINS?: string;
 }
 
 export interface FeedbackContext {
@@ -98,12 +99,12 @@ function jsonResponse(
   status: number,
   headers?: HeadersInit,
 ): Response {
+  const responseHeaders = new Headers(headers);
+  responseHeaders.set("Cache-Control", "no-store");
+
   return Response.json(body, {
     status,
-    headers: {
-      "Cache-Control": "no-store",
-      ...headers,
-    },
+    headers: responseHeaders,
   });
 }
 
@@ -188,9 +189,63 @@ function parseSubmission(value: unknown): FeedbackSubmission | null {
   };
 }
 
-function isSameOrigin(request: Request): boolean {
+interface FeedbackOriginDecision {
+  allowed: boolean;
+  origin: string | null;
+}
+
+function resolveFeedbackOrigin(
+  request: Request,
+  env: FeedbackEnv,
+): FeedbackOriginDecision {
   const origin = request.headers.get("Origin");
-  return !origin || origin === new URL(request.url).origin;
+  if (!origin) {
+    return { allowed: true, origin: null };
+  }
+
+  if (origin === new URL(request.url).origin) {
+    return { allowed: true, origin };
+  }
+
+  const allowedOrigins = (env.FEEDBACK_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return {
+    allowed: allowedOrigins.includes(origin),
+    origin,
+  };
+}
+
+function appendVaryOrigin(headers: Headers): void {
+  const varyValues = (headers.get("Vary") ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (!varyValues.some((value) => value.toLowerCase() === "origin")) {
+    varyValues.push("Origin");
+  }
+
+  headers.set("Vary", varyValues.join(", "));
+}
+
+function createCorsHeaders(
+  originDecision: FeedbackOriginDecision,
+  headers?: HeadersInit,
+): Headers {
+  const responseHeaders = new Headers(headers);
+  appendVaryOrigin(responseHeaders);
+
+  if (originDecision.allowed && originDecision.origin) {
+    responseHeaders.set(
+      "Access-Control-Allow-Origin",
+      originDecision.origin,
+    );
+  }
+
+  return responseHeaders;
 }
 
 function escapeHeaderText(value: string): string {
@@ -278,12 +333,12 @@ async function getRateLimitKey(
     .toLowerCase();
   const ipAddress = request.headers.get("CF-Connecting-IP")?.trim();
 
-  if (authenticatedEmail) {
-    return hmacText(`user:${authenticatedEmail}:${dayBucket}`, secret);
-  }
-
   if (ipAddress) {
     return hmacText(`ip:${ipAddress}:${dayBucket}`, secret);
+  }
+
+  if (authenticatedEmail) {
+    return hmacText(`user:${authenticatedEmail}:${dayBucket}`, secret);
   }
 
   return null;
@@ -608,21 +663,53 @@ export function createFeedbackHandler(
     request: Request,
     env: FeedbackEnv,
   ): Promise<Response> {
-    if (request.method !== "POST") {
-      return jsonResponse(
-        { ok: false, message: "此接口只接受反馈提交。" },
-        405,
-        { Allow: "POST" },
-      );
+    const originDecision = resolveFeedbackOrigin(request, env);
+    const respond = (
+      body: Record<string, unknown>,
+      status: number,
+      headers?: HeadersInit,
+    ): Response =>
+      jsonResponse(body, status, createCorsHeaders(originDecision, headers));
+
+    if (!originDecision.allowed) {
+      return respond({ ok: false, message: "反馈来源无效。" }, 403);
     }
 
-    if (!isSameOrigin(request)) {
-      return jsonResponse({ ok: false, message: "反馈来源无效。" }, 403);
+    if (request.method === "OPTIONS") {
+      const requestedMethod = request.headers.get(
+        "Access-Control-Request-Method",
+      );
+      if (requestedMethod && requestedMethod.toUpperCase() !== "POST") {
+        return respond(
+          { ok: false, message: "此接口只接受反馈提交。" },
+          405,
+          { Allow: "POST, OPTIONS" },
+        );
+      }
+
+      return new Response(null, {
+        status: 204,
+        headers: createCorsHeaders(originDecision, {
+          "Access-Control-Allow-Headers": "Content-Type",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Max-Age": "86400",
+          Allow: "POST, OPTIONS",
+          "Cache-Control": "no-store",
+        }),
+      });
+    }
+
+    if (request.method !== "POST") {
+      return respond(
+        { ok: false, message: "此接口只接受反馈提交。" },
+        405,
+        { Allow: "POST, OPTIONS" },
+      );
     }
 
     const contentType = request.headers.get("Content-Type") ?? "";
     if (!contentType.toLowerCase().includes("application/json")) {
-      return jsonResponse(
+      return respond(
         { ok: false, message: "反馈格式无效，请刷新后重试。" },
         415,
       );
@@ -630,7 +717,7 @@ export function createFeedbackHandler(
 
     const contentLength = Number(request.headers.get("Content-Length") ?? "0");
     if (Number.isFinite(contentLength) && contentLength > MAX_BODY_LENGTH) {
-      return jsonResponse(
+      return respond(
         { ok: false, message: "反馈内容过长，请精简后重试。" },
         413,
       );
@@ -638,7 +725,7 @@ export function createFeedbackHandler(
 
     const bodyResult = await readRequestBody(request, MAX_BODY_LENGTH);
     if (!bodyResult.ok) {
-      return jsonResponse(
+      return respond(
         {
           ok: false,
           message: bodyResult.tooLarge
@@ -653,7 +740,7 @@ export function createFeedbackHandler(
     try {
       parsedBody = JSON.parse(bodyResult.text ?? "");
     } catch {
-      return jsonResponse(
+      return respond(
         { ok: false, message: "反馈格式无效，请刷新后重试。" },
         400,
       );
@@ -661,14 +748,14 @@ export function createFeedbackHandler(
 
     const submission = parseSubmission(parsedBody);
     if (!submission) {
-      return jsonResponse(
+      return respond(
         { ok: false, message: "请填写至少 5 个字且不超过 1000 字的反馈。" },
         400,
       );
     }
 
     if (submission.website) {
-      return jsonResponse({ ok: true }, 202);
+      return respond({ ok: true }, 202);
     }
 
     let rateLimitDecision: FeedbackRateLimitDecision;
@@ -679,7 +766,7 @@ export function createFeedbackHandler(
     }
 
     if (rateLimitDecision.status === "unavailable") {
-      return jsonResponse(
+      return respond(
         { ok: false, message: "反馈功能正在准备中，请稍后再试。" },
         503,
       );
@@ -693,7 +780,7 @@ export function createFeedbackHandler(
           : rateLimitDecision.scope === "daily"
             ? "今天已经提交过多反馈，请明天再试。"
             : "提交得有点快，请一分钟后再试。";
-      return jsonResponse(
+      return respond(
         { ok: false, message },
         429,
         { "Retry-After": retryAfter },
@@ -703,18 +790,18 @@ export function createFeedbackHandler(
     try {
       const delivered = await sendEmail(submission, env);
       if (!delivered) {
-        return jsonResponse(
+        return respond(
           { ok: false, message: "反馈暂时未能送达，请稍后再试。" },
           503,
         );
       }
     } catch {
-      return jsonResponse(
+      return respond(
         { ok: false, message: "反馈暂时未能送达，请稍后再试。" },
         502,
       );
     }
 
-    return jsonResponse({ ok: true }, 202);
+    return respond({ ok: true }, 202);
   };
 }

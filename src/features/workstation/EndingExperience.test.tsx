@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { resolvePublicPath } from "../../config/runtime";
 import type { GameState } from "../../domain";
 import { createTestGame } from "../../test/fixtures";
 import { EndingExperience } from "./EndingExperience";
@@ -115,14 +116,22 @@ describe("EndingExperience", () => {
     expect(within(dialog).getByText("《逆流而上》")).toBeInTheDocument();
     expect(
       dialog.querySelector(
-        'img[src="/assets/albums/indie/stage-light.webp"]',
+        `img[src="${resolvePublicPath(
+          "/assets/albums/indie/stage-light.webp",
+        )}"]`,
       ),
     ).toBeInTheDocument();
     expect(
-      dialog.querySelector('img[src="/assets/venues/level-5.webp"]'),
+      dialog.querySelector(
+        `img[src="${resolvePublicPath("/assets/venues/level-5.webp")}"]`,
+      ),
     ).toBeInTheDocument();
     expect(
-      dialog.querySelector('img[src="/assets/endings/evergreen-band.webp"]'),
+      dialog.querySelector(
+        `img[src="${resolvePublicPath(
+          "/assets/endings/evergreen-band.webp",
+        )}"]`,
+      ),
     ).toBeInTheDocument();
     expect(
       within(dialog).getAllByText("万人体育馆终场").length,

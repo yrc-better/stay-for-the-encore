@@ -64,6 +64,40 @@ describe("站点 Worker 路由", () => {
 
     expect(response.status).toBe(202);
     expect(await response.json()).toEqual({ ok: true });
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://game.example",
+    );
+    expect(response.headers.get("Vary")).toContain("Origin");
+    expect(assetsFetch).not.toHaveBeenCalled();
+  });
+
+  it("允许博客域名的反馈预检且不会落入静态资源处理", async () => {
+    const assetsFetch = vi.fn();
+    const request = new Request("https://game.example/api/feedback", {
+      method: "OPTIONS",
+      headers: {
+        Origin: "https://blog.yrc-bot.xyz",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "Content-Type",
+      },
+    });
+
+    const response = await worker.fetch(request, {
+      ASSETS: { fetch: assetsFetch },
+      FEEDBACK_ALLOWED_ORIGINS: "https://blog.yrc-bot.xyz",
+    });
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://blog.yrc-bot.xyz",
+    );
+    expect(response.headers.get("Access-Control-Allow-Methods")).toBe(
+      "POST, OPTIONS",
+    );
+    expect(response.headers.get("Access-Control-Allow-Headers")).toBe(
+      "Content-Type",
+    );
+    expect(response.headers.get("Vary")).toContain("Origin");
     expect(assetsFetch).not.toHaveBeenCalled();
   });
 

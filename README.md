@@ -46,10 +46,23 @@ git diff --check
 - `RESEND_API_KEY`：Resend 邮件 API 密钥
 - `FEEDBACK_TO_EMAIL`：开发者收件地址
 - `FEEDBACK_RATE_LIMIT_SECRET`：用于匿名化限流标识的随机密钥
+- `FEEDBACK_ALLOWED_ORIGINS`：可选的跨站来源白名单，多个完整来源用英文逗号分隔
 - `FEEDBACK_DAILY_LIMIT`：可选的全站每日发送上限，默认 50
 - `FEEDBACK_FROM_EMAIL`：可选的已验证发件地址
 
 使用 Resend 测试发件地址时，只能发送到该 Resend 账户本人的邮箱。正式托管环境中的 `RESEND_API_KEY`、`FEEDBACK_TO_EMAIL` 和 `FEEDBACK_RATE_LIMIT_SECRET` 都应通过 Sites 运行时 Secret 配置，不要提交真实地址或密钥。服务端默认限制每位玩家每天 5 次、每分钟 3 次，并设置全站每日发送上限。
+
+## 博客子路径构建
+
+博客部署使用专用构建模式，静态文件会以
+`/projects/band-simulator/` 为公开路径，并将反馈请求发送至独立的
+Sites Worker：
+
+```bash
+npm run build:blog
+```
+
+部署时仅复制 `dist/client`。Worker、D1 配置、邮件密钥和收件地址都不能复制到静态博客目录。
 
 ## 存档与回滚
 

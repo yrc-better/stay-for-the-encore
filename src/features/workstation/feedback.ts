@@ -1,3 +1,5 @@
+import { FEEDBACK_API_URL } from "../../config/runtime";
+
 export const GAME_FEEDBACK_CATEGORIES = [
   { id: "bug", label: "问题反馈" },
   { id: "suggestion", label: "玩法建议" },
@@ -66,7 +68,7 @@ export async function submitGameFeedback(
   let payload: FeedbackApiResponse = {};
 
   try {
-    response = await fetch("/api/feedback", {
+    response = await fetch(FEEDBACK_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -1,5 +1,5 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
@@ -7,8 +7,31 @@ import { sites } from "./build/sites-vite-plugin";
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
 
-export default defineConfig(async () => {
-  const plugins = [react(), sites()];
+function staticMetadata(publicSiteUrl: string | undefined): Plugin {
+  return {
+    name: "static-metadata",
+    transformIndexHtml(html) {
+      if (!publicSiteUrl) {
+        return html;
+      }
+
+      const siteUrl = new URL(publicSiteUrl).href;
+      const socialImageUrl = new URL("og.png", siteUrl).href;
+      return html
+        .replaceAll("__SITE_URL__", siteUrl)
+        .replaceAll("__OG_IMAGE_URL__", socialImageUrl);
+    },
+  };
+}
+
+export default defineConfig(async ({ mode }) => {
+  const environment = loadEnv(mode, process.cwd(), "");
+  const base = environment.VITE_BASE_PATH?.trim() || "/";
+  const plugins = [
+    react(),
+    staticMetadata(environment.VITE_PUBLIC_SITE_URL?.trim()),
+    sites(),
+  ];
 
   if (!process.env.VITEST) {
     process.env.WRANGLER_WRITE_LOGS ??= "false";
@@ -42,6 +65,7 @@ export default defineConfig(async () => {
   }
 
   return {
+    base,
     plugins,
     test: {
       environment: "jsdom",

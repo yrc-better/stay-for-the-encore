@@ -18,14 +18,22 @@ import {
 import { PLAYER_AVATARS } from "./avatars";
 import { CANDIDATES } from "./candidates";
 import { EVENTS } from "./events";
+import { resolvePublicPath } from "../config/runtime";
 
 const root = process.cwd();
 
 function localPath(src: string): string {
-  return join(root, "public", src.replace(/^\//u, ""));
+  const relativePath = src.startsWith(import.meta.env.BASE_URL)
+    ? src.slice(import.meta.env.BASE_URL.length)
+    : src.replace(/^\//u, "");
+
+  return join(root, "public", relativePath);
 }
 
 function expectWebp(resource: ArtworkResource, variants: readonly number[] = []) {
+  const expectedAssetPrefix = `${import.meta.env.BASE_URL}assets/`;
+  expect(resource.src.startsWith(expectedAssetPrefix), resource.src).toBe(true);
+
   const variantSources = variants.map((width) =>
     resource.src.replace(/\.webp$/u, `-${width}.webp`),
   );
@@ -105,7 +113,9 @@ describe("production artwork catalog", () => {
     }
     for (const { event, artwork } of mapped) {
       if (SPECIAL_EVENT_IDS.has(event.id)) {
-        expect(artwork.src).toBe(`/assets/events/special/${event.id}.webp`);
+        expect(artwork.src).toBe(
+          resolvePublicPath(`/assets/events/special/${event.id}.webp`),
+        );
         expectWebp(artwork, [512]);
       }
     }

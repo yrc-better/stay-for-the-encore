@@ -1,6 +1,10 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  FEEDBACK_API_URL,
+  resolvePublicPath,
+} from "../../config/runtime";
 import { PLAYER_AVATARS } from "../../data/avatars";
 import { useGameStore } from "../../store";
 import { createTestGame } from "../../test/fixtures";
@@ -262,7 +266,7 @@ describe("后台工作站", () => {
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/feedback",
+      FEEDBACK_API_URL,
       expect.objectContaining({
         method: "POST",
       }),
@@ -475,7 +479,9 @@ describe("后台工作站", () => {
       render(<Workstation />);
       expect(
         document.querySelector(
-          'img[src="/assets/portraits/player/player-midnight.webp"]',
+          `img[src="${resolvePublicPath(
+            "/assets/portraits/player/player-midnight.webp",
+          )}"]`,
         ),
       ).toBeInTheDocument();
     } finally {
