@@ -154,7 +154,21 @@ describe("后台工作站", () => {
     render(<Workstation />);
 
     await user.click(screen.getByRole("tab", { name: /专辑/ }));
-    await user.click(screen.getByRole("button", { name: "保存" }));
+    const settingsButton = screen.getByRole("button", { name: "设置" });
+    expect(
+      screen.queryByRole("button", { name: "保存" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(settingsButton);
+    const settingsDialog = screen.getByRole("dialog", { name: "设置" });
+    expect(within(settingsDialog).getByText("本地存档")).toBeInTheDocument();
+    expect(
+      within(settingsDialog).getByText("主动结束生涯"),
+    ).toBeInTheDocument();
+
+    await user.click(
+      within(settingsDialog).getByRole("button", { name: "手动保存" }),
+    );
 
     const status = screen.getByRole("region", { name: "存档状态" });
     expect(within(status).getByText("当前进度已保存。")).toBeInTheDocument();
@@ -165,6 +179,50 @@ describe("后台工作站", () => {
     expect(
       screen.queryByRole("region", { name: "存档状态" }),
     ).not.toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    expect(
+      screen.queryByRole("dialog", { name: "设置" }),
+    ).not.toBeInTheDocument();
+    expect(settingsButton).toHaveFocus();
+  });
+
+  it("设置内二次确认后才能主动结束生涯", async () => {
+    const user = userEvent.setup();
+    render(<Workstation />);
+
+    await user.click(screen.getByRole("button", { name: "设置" }));
+    const settingsDialog = screen.getByRole("dialog", { name: "设置" });
+
+    await user.click(
+      within(settingsDialog).getByRole("button", { name: "主动结束" }),
+    );
+    expect(useGameStore.getState().game?.status).toBe("active");
+
+    const confirmation = within(settingsDialog).getByRole("alert");
+    const continueButton = within(confirmation).getByRole("button", {
+      name: "继续经营",
+    });
+    expect(continueButton).toHaveFocus();
+
+    await user.click(continueButton);
+    expect(useGameStore.getState().game?.status).toBe("active");
+    expect(within(settingsDialog).queryByRole("alert")).not.toBeInTheDocument();
+
+    await user.click(
+      within(settingsDialog).getByRole("button", { name: "主动结束" }),
+    );
+    await user.click(
+      within(settingsDialog).getByRole("button", { name: "确认结束" }),
+    );
+
+    expect(useGameStore.getState().game?.status).toBe("ended");
+    expect(
+      screen.queryByRole("dialog", { name: "设置" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: "潮汐背面生涯档案" }),
+    ).toBeInTheDocument();
   });
 
   it("头像资源启用后会自动使用 futureAssetPath", () => {

@@ -1,8 +1,6 @@
 import {
-  CalendarBlankIcon,
   CheckIcon,
   ClockCountdownIcon,
-  FloppyDiskIcon,
   GuitarIcon,
   LightningIcon,
   MapPinIcon,
@@ -11,7 +9,6 @@ import {
   ReceiptIcon,
   StarIcon,
   VinylRecordIcon,
-  WalletIcon,
   WarningCircleIcon,
   WaveformIcon,
   XCircleIcon,
@@ -610,15 +607,11 @@ function equipmentOption(slot: EquipmentSlot, tier: EquipmentTier) {
 export interface CareerManagementPanelProps {
   game: GameState;
   onMessage: (message: string) => void;
-  onSave: () => void;
-  onEndCareer?: () => void;
 }
 
 export function CareerManagementPanel({
   game,
   onMessage,
-  onSave,
-  onEndCareer,
 }: CareerManagementPanelProps) {
   const acceptCommercialOffer = useGameStore(
     (state) => state.acceptCommercialOffer,
@@ -632,8 +625,6 @@ export function CareerManagementPanel({
   );
   const buyEquipment = useGameStore((state) => state.buyEquipment);
   const sellEquipment = useGameStore((state) => state.sellEquipment);
-  const endCareer = useGameStore((state) => state.endCareer);
-  const [confirmingEnd, setConfirmingEnd] = useState(false);
   const status = financialStatus(game);
   const currentMonth = selectAbsoluteMonth(game);
   const equipmentSlots = Object.keys(game.equipment) as EquipmentSlot[];
@@ -648,16 +639,6 @@ export function CareerManagementPanel({
       return;
     }
     onMessage(result.ok ? result.message : result.error);
-  }
-
-  function finishCareer() {
-    if (onEndCareer) {
-      onEndCareer();
-    } else {
-      endCareer();
-    }
-    setConfirmingEnd(false);
-    onMessage("乐队生涯已主动结束。");
   }
 
   return (
@@ -1041,99 +1022,6 @@ export function CareerManagementPanel({
         })}
       </Panel>
 
-      <div className="career-management-actions">
-        <Panel
-          title="本地存档"
-          eyebrow="SAVE"
-          description="每满 12 个月会自动保存，也可以随时覆盖当前唯一存档。"
-          variant="inset"
-          action={
-            <Button
-              size="sm"
-              icon={
-                <FloppyDiskIcon
-                  size={17}
-                  weight="bold"
-                  aria-hidden="true"
-                />
-              }
-              onClick={onSave}
-            >
-              手动保存
-            </Button>
-          }
-        >
-          <p className="career-action-copy">
-            <WalletIcon size={18} weight="duotone" aria-hidden="true" />
-            存档保存在当前浏览器中，刷新后可以继续。
-          </p>
-        </Panel>
-
-        <Panel
-          title="主动结束生涯"
-          eyebrow="CAREER CONTROL"
-          description="结束后会根据真实专辑、演出、成员和资金生成最终总结。"
-          variant="inset"
-          action={
-            !confirmingEnd ? (
-              <Button
-                variant="danger"
-                size="sm"
-                icon={
-                  <WarningCircleIcon
-                    size={17}
-                    weight="bold"
-                    aria-hidden="true"
-                  />
-                }
-                onClick={() => setConfirmingEnd(true)}
-                disabled={game.status !== "active"}
-              >
-                结束生涯
-              </Button>
-            ) : undefined
-          }
-        >
-          {confirmingEnd ? (
-            <div className="career-end-confirmation" role="alert">
-              <WarningCircleIcon
-                size={22}
-                weight="fill"
-                aria-hidden="true"
-              />
-              <div>
-                <strong>确认立即结束当前乐队生涯吗？</strong>
-                <p>这个操作会进入正式结局，之后不能继续当前月份。</p>
-              </div>
-              <div className="career-button-row">
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={finishCareer}
-                >
-                  确认结束
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setConfirmingEnd(false)}
-                >
-                  继续经营
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <p className="career-action-copy">
-              <CalendarBlankIcon
-                size={18}
-                weight="duotone"
-                aria-hidden="true"
-              />
-              当前为第 {currentMonth} 月，最长生涯为 240 个月。
-            </p>
-          )}
-        </Panel>
-      </div>
     </div>
   );
 }

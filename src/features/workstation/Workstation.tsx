@@ -7,6 +7,7 @@ import {
   CoffeeIcon,
   CurrencyCnyIcon,
   FloppyDiskIcon,
+  GearSixIcon,
   GuitarIcon,
   HouseIcon,
   LightningIcon,
@@ -98,6 +99,7 @@ type WorkstationDialog =
   | "abandonAlbum"
   | "endMonth"
   | "history"
+  | "settings"
   | null;
 
 type WorkstationAction = (typeof ACTIONS)[number];
@@ -1840,6 +1842,113 @@ function EndingDialog({
   );
 }
 
+function SettingsDialog({
+  game,
+  saveMessage,
+  onSave,
+  onEndCareer,
+  onClose,
+}: {
+  game: GameState;
+  saveMessage: string | null;
+  onSave: () => void;
+  onEndCareer: () => void;
+  onClose: () => void;
+}) {
+  const [confirmingEnd, setConfirmingEnd] = useState(false);
+
+  function finishCareer() {
+    onEndCareer();
+    onClose();
+  }
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title="设置"
+      description="管理当前浏览器中的存档和乐队生涯。"
+      size="md"
+      closeLabel="关闭设置"
+    >
+      <div className="ws-settings-list" data-genre={game.band.genre}>
+        <section className="ws-settings-item">
+          <span className="ws-settings-item__icon" aria-hidden="true">
+            <FloppyDiskIcon size={22} weight="duotone" />
+          </span>
+          <div className="ws-settings-item__copy">
+            <h3>本地存档</h3>
+            <p>每满 12 个月自动保存一次，也可以随时覆盖当前唯一存档。</p>
+            <small role={saveMessage ? "status" : undefined}>
+              {saveMessage ?? "存档保存在当前浏览器中，刷新后可以继续。"}
+            </small>
+          </div>
+          <Button
+            className="ws-settings-item__action"
+            size="sm"
+            icon={
+              <FloppyDiskIcon
+                size={16}
+                weight="bold"
+                aria-hidden="true"
+              />
+            }
+            onClick={onSave}
+          >
+            手动保存
+          </Button>
+        </section>
+
+        <section className="ws-settings-item" data-tone="danger">
+          <span className="ws-settings-item__icon" aria-hidden="true">
+            <WarningCircleIcon size={22} weight="duotone" />
+          </span>
+          <div className="ws-settings-item__copy">
+            <h3>主动结束生涯</h3>
+            <p>根据真实专辑、演出、成员和资金生成最终总结。</p>
+          </div>
+          {!confirmingEnd && (
+            <Button
+              className="ws-settings-item__action"
+              variant="danger"
+              size="sm"
+              onClick={() => setConfirmingEnd(true)}
+              disabled={game.status !== "active"}
+            >
+              主动结束
+            </Button>
+          )}
+          {confirmingEnd && (
+            <div className="ws-settings-confirmation" role="alert">
+              <div>
+                <strong>确认立即结束当前乐队生涯吗？</strong>
+                <p>进入正式结局后，当前月份不能继续操作。</p>
+              </div>
+              <div className="ws-settings-confirmation__actions">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  autoFocus
+                  onClick={() => setConfirmingEnd(false)}
+                >
+                  继续经营
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={finishCareer}
+                >
+                  确认结束
+                </Button>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+    </Dialog>
+  );
+}
+
 export interface WorkstationProps {
   onOpenRules?: () => void;
   onReturnHome?: () => void;
@@ -1857,6 +1966,7 @@ export function Workstation({
   const endMonth = useGameStore((state) => state.endMonth);
   const manualSave = useGameStore((state) => state.manualSave);
   const abandonAlbum = useGameStore((state) => state.abandonAlbum);
+  const endCareer = useGameStore((state) => state.endCareer);
   const clearSavedGame = useGameStore((state) => state.clearSavedGame);
   const clearCurrentGame = useGameStore((state) => state.clearCurrentGame);
 
@@ -2059,7 +2169,6 @@ export function Workstation({
           <CareerManagementPanel
             game={game}
             onMessage={setCareerMessage}
-            onSave={handleSave}
           />
         </div>
       ),
@@ -2109,10 +2218,12 @@ export function Workstation({
           <Button
             variant="secondary"
             size="sm"
-            icon={<FloppyDiskIcon size={17} weight="bold" />}
-            onClick={handleSave}
+            icon={<GearSixIcon size={17} weight="bold" />}
+            aria-haspopup="dialog"
+            aria-expanded={dialog === "settings"}
+            onClick={() => setDialog("settings")}
           >
-            保存
+            设置
           </Button>
         </div>
       </header>
@@ -2188,6 +2299,17 @@ export function Workstation({
       {dialog === "rules" && <RulesDialog onClose={() => setDialog(null)} />}
       {dialog === "history" && (
         <HistoryDialog game={game} onClose={() => setDialog(null)} />
+      )}
+      {dialog === "settings" && (
+        <SettingsDialog
+          game={game}
+          saveMessage={saveMessage}
+          onSave={handleSave}
+          onEndCareer={() => {
+            endCareer();
+          }}
+          onClose={() => setDialog(null)}
+        />
       )}
 
       {dialog === "personalTraining" && (

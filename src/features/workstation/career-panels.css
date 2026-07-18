@@ -551,8 +551,7 @@
   padding: var(--bb-space-2);
 }
 
-.career-management-summary,
-.career-management-actions {
+.career-management-summary {
   display: grid;
   min-width: 0;
   grid-template-columns: repeat(
@@ -587,8 +586,7 @@
   margin-top: var(--bb-space-4);
 }
 
-.career-crisis-note,
-.career-end-confirmation {
+.career-crisis-note {
   display: flex;
   min-width: 0;
   align-items: flex-start;
@@ -601,13 +599,11 @@
   background: var(--bb-color-negative-soft);
 }
 
-.career-crisis-note svg,
-.career-end-confirmation > svg {
+.career-crisis-note svg {
   flex: 0 0 auto;
 }
 
-.career-crisis-note p,
-.career-end-confirmation p {
+.career-crisis-note p {
   margin: 0;
   color: var(--bb-color-text-muted);
   font-size: 0.72rem;
@@ -740,44 +736,6 @@
   font-size: 0.76rem;
   font-weight: 700;
   background: var(--bb-color-accent-soft);
-}
-
-.career-action-copy {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--bb-space-2);
-  margin: 0;
-  color: var(--bb-color-text-muted);
-  font-size: 0.75rem;
-  line-height: 1.55;
-}
-
-.career-action-copy svg {
-  margin-top: 0.12rem;
-  flex: 0 0 auto;
-  color: var(--bb-color-accent);
-}
-
-.career-end-confirmation {
-  margin-top: 0;
-  flex-wrap: wrap;
-}
-
-.career-end-confirmation > div:first-of-type {
-  min-width: 0;
-  flex: 1 1 14rem;
-}
-
-.career-end-confirmation strong {
-  display: block;
-  margin-bottom: var(--bb-space-1);
-  color: var(--bb-color-text);
-  font-size: 0.82rem;
-}
-
-.career-end-confirmation .career-button-row {
-  width: 100%;
-  padding-left: calc(22px + var(--bb-space-3));
 }
 
 @media (max-width: 70rem) {

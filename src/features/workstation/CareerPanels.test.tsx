@@ -118,7 +118,7 @@ describe("生涯演出与经营面板", () => {
     });
   });
 
-  it("处理商业、合约、逐级设备、保存和二次结束确认", async () => {
+  it("处理商业、合约和逐级设备，并移除低频生涯操作", async () => {
     const user = userEvent.setup();
     const game = createTestGame();
     game.band.funds = 100_000;
@@ -148,15 +148,10 @@ describe("生涯演出与经营面板", () => {
     useGameStore.setState({ game });
 
     const onMessage = vi.fn();
-    const onSave = vi.fn();
-    const onEndCareer = vi.fn();
-
     render(
       <CareerManagementPanel
         game={game}
         onMessage={onMessage}
-        onSave={onSave}
-        onEndCareer={onEndCareer}
       />,
     );
 
@@ -184,16 +179,7 @@ describe("生涯演出与经营面板", () => {
     );
     expect(useGameStore.getState().game?.equipment.guitar).toBe("advanced");
 
-    await user.click(screen.getByRole("button", { name: "手动保存" }));
-    expect(onSave).toHaveBeenCalledTimes(1);
-
-    await user.click(screen.getByRole("button", { name: "结束生涯" }));
-    expect(
-      screen.getByText("确认立即结束当前乐队生涯吗？"),
-    ).toBeInTheDocument();
-    expect(onEndCareer).not.toHaveBeenCalled();
-
-    await user.click(screen.getByRole("button", { name: "确认结束" }));
-    expect(onEndCareer).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText("本地存档")).not.toBeInTheDocument();
+    expect(screen.queryByText("主动结束生涯")).not.toBeInTheDocument();
   });
 });
