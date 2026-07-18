@@ -39,6 +39,18 @@ git diff --check
 
 `npm run check` 会依次执行 TypeScript 类型检查、全部 Vitest 测试和生产构建。领域层另有多随机种子的 240 个月长局模拟，用于检查流程死锁、数值越界和结局触发。
 
+## 反馈邮件配置
+
+设置页的游戏反馈通过 Worker 服务端发送，收件地址和邮件密钥不会进入浏览器代码。开发时复制 `.dev.vars.example` 为 `.dev.vars`，再配置：
+
+- `RESEND_API_KEY`：Resend 邮件 API 密钥
+- `FEEDBACK_TO_EMAIL`：开发者收件地址
+- `FEEDBACK_RATE_LIMIT_SECRET`：用于匿名化限流标识的随机密钥
+- `FEEDBACK_DAILY_LIMIT`：可选的全站每日发送上限，默认 50
+- `FEEDBACK_FROM_EMAIL`：可选的已验证发件地址
+
+使用 Resend 测试发件地址时，只能发送到该 Resend 账户本人的邮箱。正式托管环境中的 `RESEND_API_KEY`、`FEEDBACK_TO_EMAIL` 和 `FEEDBACK_RATE_LIMIT_SECRET` 都应通过 Sites 运行时 Secret 配置，不要提交真实地址或密钥。服务端默认限制每位玩家每天 5 次、每分钟 3 次，并设置全站每日发送上限。
+
 ## 存档与回滚
 
 - 存档只保存在当前浏览器，不使用账号或云端同步。

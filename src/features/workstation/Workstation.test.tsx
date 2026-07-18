@@ -1,6 +1,6 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PLAYER_AVATARS } from "../../data/avatars";
 import { useGameStore } from "../../store";
 import { createTestGame } from "../../test/fixtures";
@@ -18,6 +18,10 @@ describe("后台工作站", () => {
       lastError: null,
       performAction: originalPerformAction,
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("展示乐队档案并执行月内只能一次的行动", async () => {
@@ -223,6 +227,240 @@ describe("后台工作站", () => {
     expect(
       screen.getByRole("dialog", { name: "潮汐背面生涯档案" }),
     ).toBeInTheDocument();
+  });
+
+  it("可以在设置内提交游戏反馈且前端请求不包含收件地址", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 202,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<Workstation />);
+
+    await user.click(screen.getByRole("button", { name: "设置" }));
+    const settingsDialog = screen.getByRole("dialog", { name: "设置" });
+
+    await user.selectOptions(
+      within(settingsDialog).getByRole("combobox", { name: "反馈类型" }),
+      "balance",
+    );
+    await user.type(
+      within(settingsDialog).getByRole("textbox", { name: "反馈内容" }),
+      "演出收益偏低，希望场地解锁节奏更顺畅。",
+    );
+    await user.click(
+      within(settingsDialog).getByRole("button", { name: "提交反馈" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        within(settingsDialog).getByRole("status"),
+      ).toHaveTextContent("反馈已送达");
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/feedback",
+      expect.objectContaining({
+        method: "POST",
+      }),
+    );
+
+    const requestInit = fetchMock.mock.calls[0][1] as RequestInit;
+    const body = JSON.parse(String(requestInit.body)) as Record<string, unknown>;
+    expect(body).toMatchObject({
+      category: "balance",
+      message: "演出收益偏低，希望场地解锁节奏更顺畅。",
+      website: "",
+      context: {
+        bandName: "潮汐背面",
+        genre: "indie",
+        year: 1,
+        month: 1,
+      },
+    });
+    expect(body.submissionId).toEqual(expect.any(String));
+    expect(body.submittedAt).toEqual(expect.any(String));
+    expect(body).not.toHaveProperty("to");
+    expect(body).not.toHaveProperty("email");
+  });
+
+  it("反馈提交期间禁用重复操作并显示进度", async () => {
+    let resolveFetch!: (response: Response) => void;
+    const fetchMock = vi.fn().mockReturnValue(
+      new Promise<Response>((resolve) => {
+        resolveFetch = resolve;
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<Workstation />);
+
+    await user.click(screen.getByRole("button", { name: "设置" }));
+    const settingsDialog = screen.getByRole("dialog", { name: "设置" });
+    const feedbackInput = within(settingsDialog).getByRole("textbox", {
+      name: "反馈内容",
+    });
+    await user.type(feedbackInput, "希望增加更多演出随机事件。");
+    await user.click(
+      within(settingsDialog).getByRole("button", { name: "提交反馈" }),
+    );
+
+    expect(
+      within(settingsDialog).getByRole("button", { name: "正在提交" }),
+    ).toBeDisabled();
+    expect(feedbackInput).toBeDisabled();
+
+    resolveFetch(
+      Response.json({ ok: true }, { status: 202 }),
+    );
+    await waitFor(() => {
+      expect(
+        within(settingsDialog).getByRole("status"),
+      ).toHaveTextContent("反馈已送达");
+    });
+  });
+
+  it("反馈无效时聚焦字段，投递失败时保留草稿和幂等标识", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          ok: false,
+          message: "反馈暂时未能送达，请稍后再试。",
+        }),
+        {
+          status: 503,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<Workstation />);
+
+    await user.click(screen.getByRole("button", { name: "设置" }));
+    const settingsDialog = screen.getByRole("dialog", { name: "设置" });
+    const feedbackInput = within(settingsDialog).getByRole("textbox", {
+      name: "反馈内容",
+    });
+
+    await user.type(feedbackInput, "太短");
+    await user.click(
+      within(settingsDialog).getByRole("button", { name: "提交反馈" }),
+    );
+    expect(within(settingsDialog).getByRole("alert")).toHaveTextContent(
+      "请填写 5 到 1000 个字符的反馈",
+    );
+    expect(feedbackInput).toHaveFocus();
+    expect(feedbackInput).toHaveAttribute("aria-invalid", "true");
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await user.clear(feedbackInput);
+    await user.type(feedbackInput, "希望增加更多演出随机事件。");
+    await user.click(
+      within(settingsDialog).getByRole("button", { name: "提交反馈" }),
+    );
+
+    await waitFor(() => {
+      expect(within(settingsDialog).getByRole("alert")).toHaveTextContent(
+        "反馈暂时未能送达，请稍后再试。",
+      );
+    });
+    expect(feedbackInput).toHaveValue("希望增加更多演出随机事件。");
+    expect(feedbackInput).not.toHaveAttribute("aria-invalid");
+
+    const firstRequest = fetchMock.mock.calls[0][1] as RequestInit;
+    const firstBody = JSON.parse(String(firstRequest.body)) as Record<
+      string,
+      unknown
+    >;
+
+    await user.click(
+      within(settingsDialog).getByRole("button", { name: "关闭设置" }),
+    );
+    const currentGame = useGameStore.getState().game!;
+    act(() => {
+      useGameStore.setState({
+        game: {
+          ...currentGame,
+          calendar: {
+            ...currentGame.calendar,
+            month: 2,
+          },
+        },
+      });
+    });
+    await user.click(screen.getByRole("button", { name: "设置" }));
+    const reopenedDialog = screen.getByRole("dialog", { name: "设置" });
+    const reopenedInput = within(reopenedDialog).getByRole("textbox", {
+      name: "反馈内容",
+    });
+    expect(reopenedInput).toHaveValue("希望增加更多演出随机事件。");
+
+    await user.click(
+      within(reopenedDialog).getByRole("button", { name: "提交反馈" }),
+    );
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+    const secondRequest = fetchMock.mock.calls[1][1] as RequestInit;
+    const secondBody = JSON.parse(String(secondRequest.body)) as Record<
+      string,
+      unknown
+    >;
+    expect(secondBody.submissionId).toBe(firstBody.submissionId);
+    expect(secondBody.submittedAt).toBe(firstBody.submittedAt);
+    expect(secondBody).toEqual(firstBody);
+  });
+
+  it("提交中关闭并重开设置时持续展示进度和最终结果", async () => {
+    let resolveFetch!: (response: Response) => void;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockReturnValue(
+        new Promise<Response>((resolve) => {
+          resolveFetch = resolve;
+        }),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<Workstation />);
+
+    await user.click(screen.getByRole("button", { name: "设置" }));
+    let settingsDialog = screen.getByRole("dialog", { name: "设置" });
+    await user.type(
+      within(settingsDialog).getByRole("textbox", { name: "反馈内容" }),
+      "第一条仍在发送中的反馈。",
+    );
+    await user.click(
+      within(settingsDialog).getByRole("button", { name: "提交反馈" }),
+    );
+    await user.click(
+      within(settingsDialog).getByRole("button", { name: "关闭设置" }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "设置" }));
+    settingsDialog = screen.getByRole("dialog", { name: "设置" });
+    const reopenedInput = within(settingsDialog).getByRole("textbox", {
+      name: "反馈内容",
+    });
+    expect(reopenedInput).toBeDisabled();
+    expect(
+      within(settingsDialog).getByRole("button", { name: "正在提交" }),
+    ).toBeDisabled();
+
+    await act(async () => {
+      resolveFetch(Response.json({ ok: true }, { status: 202 }));
+      await Promise.resolve();
+    });
+    await waitFor(() => {
+      expect(
+        within(settingsDialog).getByRole("status"),
+      ).toHaveTextContent("反馈已送达");
+    });
+    expect(reopenedInput).toHaveValue("");
+    expect(reopenedInput).not.toBeDisabled();
   });
 
   it("头像资源启用后会自动使用 futureAssetPath", () => {

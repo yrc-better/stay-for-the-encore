@@ -16,6 +16,7 @@ import {
   MegaphoneIcon,
   MicrophoneStageIcon,
   MusicNotesIcon,
+  PaperPlaneTiltIcon,
   QuestionIcon,
   ReceiptIcon,
   StarHalfIcon,
@@ -28,10 +29,16 @@ import {
   WaveformIcon,
 } from "@phosphor-icons/react";
 import {
+  useCallback,
+  useId,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
+  type Dispatch,
+  type FormEvent,
   type ReactNode,
+  type SetStateAction,
 } from "react";
 import {
   AttributeMeter,
@@ -81,6 +88,15 @@ import {
   CareerPerformancePanel,
 } from "./CareerPanels";
 import { EndingExperience } from "./EndingExperience";
+import {
+  createFeedbackSubmissionId,
+  GAME_FEEDBACK_CATEGORIES,
+  GAME_FEEDBACK_MESSAGE_MAX_LENGTH,
+  GAME_FEEDBACK_MESSAGE_MIN_LENGTH,
+  submitGameFeedback,
+  type GameFeedbackCategory,
+  type GameFeedbackContext,
+} from "./feedback";
 import "./workstation.css";
 
 type WorkstationPage =
@@ -103,6 +119,28 @@ type WorkstationDialog =
   | null;
 
 type WorkstationAction = (typeof ACTIONS)[number];
+
+interface GameFeedbackDraft {
+  category: GameFeedbackCategory;
+  message: string;
+  submissionId: string | null;
+  submittedAt: string | null;
+  context: GameFeedbackContext | null;
+}
+
+interface GameFeedbackStatus {
+  phase: "idle" | "submitting" | "success";
+  activeSubmissionId: string | null;
+  fieldError: string | null;
+  formError: string | null;
+}
+
+const INITIAL_GAME_FEEDBACK_STATUS: GameFeedbackStatus = {
+  phase: "idle",
+  activeSubmissionId: null,
+  fieldError: null,
+  formError: null,
+};
 
 const MEMBER_STAT_LABELS: Readonly<Record<MemberStatKey, string>> = {
   professional: "专业",
@@ -1844,22 +1882,150 @@ function EndingDialog({
 
 function SettingsDialog({
   game,
+  feedbackDraft,
+  feedbackStatus,
   saveMessage,
+  onFeedbackDraftChange,
+  onFeedbackStatusChange,
   onSave,
   onEndCareer,
   onClose,
 }: {
   game: GameState;
+  feedbackDraft: GameFeedbackDraft;
+  feedbackStatus: GameFeedbackStatus;
   saveMessage: string | null;
+  onFeedbackDraftChange: Dispatch<SetStateAction<GameFeedbackDraft>>;
+  onFeedbackStatusChange: Dispatch<SetStateAction<GameFeedbackStatus>>;
   onSave: () => void;
   onEndCareer: () => void;
   onClose: () => void;
 }) {
   const [confirmingEnd, setConfirmingEnd] = useState(false);
+  const [feedbackWebsite, setFeedbackWebsite] = useState("");
+  const feedbackCategoryId = useId();
+  const feedbackMessageId = useId();
+  const feedbackHelperId = useId();
+  const feedbackFieldErrorId = useId();
+  const feedbackMessageRef = useRef<HTMLTextAreaElement>(null);
 
   function finishCareer() {
     onEndCareer();
     onClose();
+  }
+
+  function resetFeedbackStatus() {
+    onFeedbackStatusChange((currentStatus) =>
+      currentStatus.phase === "submitting"
+        ? currentStatus
+        : INITIAL_GAME_FEEDBACK_STATUS,
+    );
+  }
+
+  async function handleFeedbackSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (feedbackStatus.phase === "submitting") {
+      return;
+    }
+
+    const message = feedbackDraft.message.trim();
+
+    if (
+      message.length < GAME_FEEDBACK_MESSAGE_MIN_LENGTH ||
+      message.length > GAME_FEEDBACK_MESSAGE_MAX_LENGTH
+    ) {
+      onFeedbackStatusChange({
+        phase: "idle",
+        activeSubmissionId: null,
+        formError: null,
+        fieldError: `请填写 ${GAME_FEEDBACK_MESSAGE_MIN_LENGTH} 到 ${GAME_FEEDBACK_MESSAGE_MAX_LENGTH} 个字符的反馈。`,
+      });
+      feedbackMessageRef.current?.focus();
+      return;
+    }
+
+    const submissionIdentity =
+      feedbackDraft.submissionId &&
+      feedbackDraft.submittedAt &&
+      feedbackDraft.context
+        ? {
+            submissionId: feedbackDraft.submissionId,
+            submittedAt: feedbackDraft.submittedAt,
+            context: feedbackDraft.context,
+          }
+        : {
+            submissionId: createFeedbackSubmissionId(),
+            submittedAt: new Date().toISOString(),
+            context: {
+              bandName: game.band.name,
+              genre: game.band.genre,
+              year: game.calendar.year,
+              month: game.calendar.month,
+            },
+          };
+
+    if (
+      !feedbackDraft.submissionId ||
+      !feedbackDraft.submittedAt ||
+      !feedbackDraft.context
+    ) {
+      onFeedbackDraftChange({
+        ...feedbackDraft,
+        ...submissionIdentity,
+      });
+    }
+
+    onFeedbackStatusChange({
+      phase: "submitting",
+      activeSubmissionId: submissionIdentity.submissionId,
+      fieldError: null,
+      formError: null,
+    });
+
+    try {
+      await submitGameFeedback({
+        ...submissionIdentity,
+        category: feedbackDraft.category,
+        message,
+        website: feedbackWebsite,
+      });
+      onFeedbackDraftChange((currentDraft) =>
+        currentDraft.submissionId === submissionIdentity.submissionId
+          ? {
+              category: currentDraft.category,
+              message: "",
+              submissionId: null,
+              submittedAt: null,
+              context: null,
+            }
+          : currentDraft,
+      );
+      setFeedbackWebsite("");
+      onFeedbackStatusChange((currentStatus) =>
+        currentStatus.activeSubmissionId === submissionIdentity.submissionId
+          ? {
+              phase: "success",
+              activeSubmissionId: null,
+              fieldError: null,
+              formError: null,
+            }
+          : currentStatus,
+      );
+    } catch (error) {
+      onFeedbackStatusChange((currentStatus) =>
+        currentStatus.activeSubmissionId === submissionIdentity.submissionId
+          ? {
+              phase: "idle",
+              activeSubmissionId: null,
+              fieldError: null,
+              formError:
+                error instanceof Error
+                  ? error.message
+                  : "反馈暂时未能送达，请稍后再试。",
+            }
+          : currentStatus,
+      );
+    }
   }
 
   return (
@@ -1867,11 +2033,154 @@ function SettingsDialog({
       open
       onClose={onClose}
       title="设置"
-      description="管理当前浏览器中的存档和乐队生涯。"
+      description="管理存档、乐队生涯和游戏反馈。"
       size="md"
       closeLabel="关闭设置"
     >
       <div className="ws-settings-list" data-genre={game.band.genre}>
+        <section className="ws-settings-item ws-settings-item--feedback">
+          <span className="ws-settings-item__icon" aria-hidden="true">
+            <ChatsCircleIcon size={22} weight="duotone" />
+          </span>
+          <div className="ws-settings-item__copy">
+            <h3>游戏反馈</h3>
+            <p>遇到问题或有玩法建议，写下来后直接提交给开发者。</p>
+          </div>
+
+          <form
+            className="ws-feedback-form"
+            onSubmit={handleFeedbackSubmit}
+            noValidate
+          >
+            <label htmlFor={feedbackCategoryId}>
+              <span>反馈类型</span>
+              <select
+                id={feedbackCategoryId}
+                value={feedbackDraft.category}
+                disabled={feedbackStatus.phase === "submitting"}
+                onChange={(event) => {
+                  onFeedbackDraftChange({
+                    ...feedbackDraft,
+                    category: event.target.value as GameFeedbackCategory,
+                    submissionId: null,
+                    submittedAt: null,
+                    context: null,
+                  });
+                  resetFeedbackStatus();
+                }}
+              >
+                {GAME_FEEDBACK_CATEGORIES.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label htmlFor={feedbackMessageId}>
+              <span>反馈内容</span>
+              <textarea
+                ref={feedbackMessageRef}
+                id={feedbackMessageId}
+                value={feedbackDraft.message}
+                rows={5}
+                maxLength={GAME_FEEDBACK_MESSAGE_MAX_LENGTH}
+                disabled={feedbackStatus.phase === "submitting"}
+                aria-describedby={`${feedbackHelperId}${
+                  feedbackStatus.fieldError ? ` ${feedbackFieldErrorId}` : ""
+                }`}
+                aria-invalid={
+                  feedbackStatus.fieldError ? "true" : undefined
+                }
+                placeholder="例如：演出收益偏低，希望场地解锁节奏更顺畅。"
+                onChange={(event) => {
+                  onFeedbackDraftChange({
+                    ...feedbackDraft,
+                    message: event.target.value,
+                    submissionId: null,
+                    submittedAt: null,
+                    context: null,
+                  });
+                  resetFeedbackStatus();
+                }}
+              />
+            </label>
+
+            <input
+              className="ws-feedback-honeypot"
+              type="text"
+              name="website"
+              value={feedbackWebsite}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              onChange={(event) => setFeedbackWebsite(event.target.value)}
+            />
+
+            <div className="ws-feedback-form__meta" id={feedbackHelperId}>
+              <span>
+                内容和当前乐队进度会通过 Resend 邮件服务发送，不会公开展示，请勿填写个人敏感信息。
+              </span>
+              <span
+                aria-label={`反馈字符数：${feedbackDraft.message.length} / ${GAME_FEEDBACK_MESSAGE_MAX_LENGTH}`}
+              >
+                {feedbackDraft.message.length} /{" "}
+                {GAME_FEEDBACK_MESSAGE_MAX_LENGTH}
+              </span>
+            </div>
+
+            {feedbackStatus.fieldError && (
+              <p
+                className="ws-feedback-form__message"
+                id={feedbackFieldErrorId}
+                role="alert"
+                data-tone="danger"
+              >
+                {feedbackStatus.fieldError}
+              </p>
+            )}
+
+            {feedbackStatus.formError && (
+              <p
+                className="ws-feedback-form__message"
+                role="alert"
+                data-tone="danger"
+              >
+                {feedbackStatus.formError}
+              </p>
+            )}
+
+            {feedbackStatus.phase === "success" && (
+              <p
+                className="ws-feedback-form__message"
+                role="status"
+                data-tone="positive"
+              >
+                反馈已送达，谢谢你帮我们把游戏做得更好。
+              </p>
+            )}
+
+            <div className="ws-feedback-form__actions">
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                loading={feedbackStatus.phase === "submitting"}
+                loadingLabel="正在提交"
+                icon={
+                  <PaperPlaneTiltIcon
+                    size={16}
+                    weight="bold"
+                    aria-hidden="true"
+                  />
+                }
+              >
+                提交反馈
+              </Button>
+            </div>
+          </form>
+        </section>
+
         <section className="ws-settings-item">
           <span className="ws-settings-item__icon" aria-hidden="true">
             <FloppyDiskIcon size={22} weight="duotone" />
@@ -1978,10 +2287,20 @@ export function Workstation({
   const [albumTitle, setAlbumTitle] = useState("");
   const [albumCoverId, setAlbumCoverId] = useState("");
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [feedbackDraft, setFeedbackDraft] = useState<GameFeedbackDraft>({
+    category: "suggestion",
+    message: "",
+    submissionId: null,
+    submittedAt: null,
+    context: null,
+  });
+  const [feedbackStatus, setFeedbackStatus] =
+    useState<GameFeedbackStatus>(INITIAL_GAME_FEEDBACK_STATUS);
   const [careerMessage, setCareerMessage] = useState<string | null>(null);
   const [inlineTrainingError, setInlineTrainingError] = useState<string | null>(
     null,
   );
+  const closeDialog = useCallback(() => setDialog(null), []);
 
   const genre = useMemo(
     () => GENRES.find((item) => item.id === game?.band.genre),
@@ -2303,12 +2622,16 @@ export function Workstation({
       {dialog === "settings" && (
         <SettingsDialog
           game={game}
+          feedbackDraft={feedbackDraft}
+          feedbackStatus={feedbackStatus}
           saveMessage={saveMessage}
+          onFeedbackDraftChange={setFeedbackDraft}
+          onFeedbackStatusChange={setFeedbackStatus}
           onSave={handleSave}
           onEndCareer={() => {
             endCareer();
           }}
-          onClose={() => setDialog(null)}
+          onClose={closeDialog}
         />
       )}
 

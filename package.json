@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "db:generate": "drizzle-kit generate",
     "prebuild": "node build/clean-dist.mjs",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --pretty false",
@@ -19,6 +20,7 @@
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
+    "drizzle-orm": "^0.45.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "zod": "^4.0.5",
@@ -33,6 +35,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
+    "drizzle-kit": "^0.31.10",
     "jsdom": "^26.1.0",
     "typescript": "~5.8.3",
     "vite": "^7.0.4",
