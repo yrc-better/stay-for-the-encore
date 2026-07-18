@@ -31,9 +31,9 @@ export const CANDIDATES = [
       belonging: 62,
     },
     portrait: {
-      alt: "戴黑框眼镜、抱着深红色电吉他的顾言川日系动画头像",
+      alt: "珊瑚红线稿绘制的戴眼镜青年顾言川头像",
       futureAssetPath: "/assets/portraits/candidates/gu-yanchuan.webp",
-      available: false,
+      available: true,
       placeholder: {
         background: "linear-gradient(145deg, #713d42, #1d1b24)",
         foreground: "#ffe3dc",
@@ -60,9 +60,9 @@ export const CANDIDATES = [
       belonging: 31,
     },
     portrait: {
-      alt: "高马尾、肩背白色电吉他的林见夏日系动画头像",
+      alt: "暖橙线稿绘制的高马尾青年林见夏头像",
       futureAssetPath: "/assets/portraits/candidates/lin-jianxia.webp",
-      available: false,
+      available: true,
       placeholder: {
         background: "linear-gradient(145deg, #aa5b33, #24181a)",
         foreground: "#fff0cf",
@@ -89,9 +89,9 @@ export const CANDIDATES = [
       belonging: 35,
     },
     portrait: {
-      alt: "浅灰头发、拿着效果器旋钮的周既白日系动画头像",
+      alt: "青蓝线稿绘制的蓬松短发青年周既白头像",
       futureAssetPath: "/assets/portraits/candidates/zhou-jibai.webp",
-      available: false,
+      available: true,
       placeholder: {
         background: "linear-gradient(145deg, #416a75, #181d25)",
         foreground: "#dffaff",
@@ -118,9 +118,9 @@ export const CANDIDATES = [
       belonging: 74,
     },
     portrait: {
-      alt: "短发、抱着湖蓝色贝斯的许知遥日系动画头像",
+      alt: "青绿色线稿绘制的齐刘海短发青年许知遥头像",
       futureAssetPath: "/assets/portraits/candidates/xu-zhiyao.webp",
-      available: false,
+      available: true,
       placeholder: {
         background: "linear-gradient(145deg, #38706b, #172023)",
         foreground: "#d8fff3",
@@ -147,9 +147,9 @@ export const CANDIDATES = [
       belonging: 51,
     },
     portrait: {
-      alt: "深棕卷发、穿工装夹克的唐闻舟日系动画头像",
+      alt: "琥珀色线稿绘制的微卷短发青年唐闻舟头像",
       futureAssetPath: "/assets/portraits/candidates/tang-wenzhou.webp",
-      available: false,
+      available: true,
       placeholder: {
         background: "linear-gradient(145deg, #695545, #1e1a1a)",
         foreground: "#f7e6ce",
@@ -176,9 +176,9 @@ export const CANDIDATES = [
       belonging: 28,
     },
     portrait: {
-      alt: "紫黑长发、戴监听耳机的沈安宁日系动画头像",
+      alt: "紫色线稿绘制的长发青年沈安宁头像",
       futureAssetPath: "/assets/portraits/candidates/shen-anning.webp",
-      available: false,
+      available: true,
       placeholder: {
         background: "linear-gradient(145deg, #624b80, #1b1725)",
         foreground: "#f0dcff",
@@ -205,9 +205,9 @@ export const CANDIDATES = [
       belonging: 56,
     },
     portrait: {
-      alt: "寸头、肩搭鼓棒袋的魏行之日系动画头像",
+      alt: "冷灰线稿绘制的寸头青年魏行之头像",
       futureAssetPath: "/assets/portraits/candidates/wei-xingzhi.webp",
-      available: false,
+      available: true,
       placeholder: {
         background: "linear-gradient(145deg, #4d5965, #171b20)",
         foreground: "#e5edf5",
@@ -234,9 +234,9 @@ export const CANDIDATES = [
       belonging: 31,
     },
     portrait: {
-      alt: "红棕短发、转着鼓棒的苏棠日系动画头像",
+      alt: "红橙线稿绘制的短发青年苏棠头像",
       futureAssetPath: "/assets/portraits/candidates/su-tang.webp",
-      available: false,
+      available: true,
       placeholder: {
         background: "linear-gradient(145deg, #9a4437, #251719)",
         foreground: "#ffe0d1",
@@ -263,9 +263,9 @@ export const CANDIDATES = [
       belonging: 28,
     },
     portrait: {
-      alt: "蓝黑卷发、戴大耳机的韩子墨日系动画头像",
+      alt: "蓝色线稿绘制的戴监听设备青年韩子墨头像",
       futureAssetPath: "/assets/portraits/candidates/han-zimo.webp",
-      available: false,
+      available: true,
       placeholder: {
         background: "linear-gradient(145deg, #315d83, #151b25)",
         foreground: "#d9efff",
@@ -292,9 +292,9 @@ export const CANDIDATES = [
       belonging: 73,
     },
     portrait: {
-      alt: "齐肩黑发、手扶小型合成器的陈星遥日系动画头像",
+      alt: "青色线稿绘制的齐肩卷发青年陈星遥头像",
       futureAssetPath: "/assets/portraits/candidates/chen-xingyao.webp",
-      available: false,
+      available: true,
       placeholder: {
         background: "linear-gradient(145deg, #375d62, #172023)",
         foreground: "#dbfffb",
@@ -321,9 +321,9 @@ export const CANDIDATES = [
       belonging: 47,
     },
     portrait: {
-      alt: "深灰短发、拿着接线图的宋清和日系动画头像",
+      alt: "冷蓝线稿绘制的深色短发青年宋清和头像",
       futureAssetPath: "/assets/portraits/candidates/song-qinghe.webp",
-      available: false,
+      available: true,
       placeholder: {
         background: "linear-gradient(145deg, #515868, #181b22)",
         foreground: "#e8ecff",
@@ -350,9 +350,9 @@ export const CANDIDATES = [
       belonging: 29,
     },
     portrait: {
-      alt: "栗色长发、身旁亮着合成器灯光的陆思弦日系动画头像",
+      alt: "紫色线稿绘制的兜帽长发青年陆思弦头像",
       futureAssetPath: "/assets/portraits/candidates/lu-sixian.webp",
-      available: false,
+      available: true,
       placeholder: {
         background: "linear-gradient(145deg, #66508f, #191724)",
         foreground: "#eee2ff",

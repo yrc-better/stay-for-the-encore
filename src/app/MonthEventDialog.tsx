@@ -9,8 +9,8 @@ import {
   TrendDownIcon,
   TrendUpIcon,
 } from "@phosphor-icons/react";
-import { Button, Dialog, StatusBadge } from "../components";
-import { EVENTS } from "../data";
+import { ArtworkImage, Button, Dialog, StatusBadge } from "../components";
+import { EVENTS, resolveEventArtwork } from "../data";
 import type { EventContent, EventEffect, EventOutcome } from "../data/types";
 import type { GameState } from "../domain";
 import { useGameStore } from "../store";
@@ -72,13 +72,17 @@ export function MonthEventDialog({ game }: MonthEventDialogProps) {
   const [resolvedOutcome, setResolvedOutcome] = useState<EventOutcome | null>(
     null,
   );
+  const [resolvedEvent, setResolvedEvent] = useState<EventContent | null>(null);
 
   const event = useMemo(
     () => EVENTS.find((item) => item.id === game.pendingEvent) ?? null,
     [game.pendingEvent],
   );
 
-  if (!event && !resolvedOutcome) {
+  const displayEvent = event ?? resolvedEvent;
+  const artwork = displayEvent ? resolveEventArtwork(displayEvent) : null;
+
+  if (!displayEvent && !resolvedOutcome) {
     return null;
   }
 
@@ -95,6 +99,7 @@ export function MonthEventDialog({ game }: MonthEventDialogProps) {
         (item) => item.id === result.record.outcomeId,
       );
       if (outcome) {
+        setResolvedEvent(currentEvent);
         setResolvedOutcome(outcome);
       }
     }
@@ -121,6 +126,7 @@ export function MonthEventDialog({ game }: MonthEventDialogProps) {
             iconPosition="end"
             onClick={() => {
               setResolvedOutcome(null);
+              setResolvedEvent(null);
             }}
           >
             继续本月
@@ -128,6 +134,9 @@ export function MonthEventDialog({ game }: MonthEventDialogProps) {
         ) : undefined
       }
     >
+      {artwork && (
+        <ArtworkImage artwork={artwork} className="month-event__art" />
+      )}
       {resolvedOutcome ? (
         <div className="month-event-result">
           <div className="month-event-result__headline">

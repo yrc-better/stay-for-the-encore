@@ -46,6 +46,9 @@ describe("月初事件弹窗", () => {
     expect(
       screen.getByRole("dialog", { name: "暴雨中的排练日" }),
     ).toBeInTheDocument();
+    expect(
+      document.querySelector('img[src="/assets/events/pools/life.webp"]'),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/归属感 \+1/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /取消这次集合/ }));

@@ -17,6 +17,7 @@ import {
 } from "@phosphor-icons/react";
 import {
   AttributeMeter,
+  ArtworkImage,
   Button,
   Panel,
   StatusBadge,
@@ -28,6 +29,11 @@ import {
   RECRUITABLE_ROLE_LABELS,
 } from "../../data/candidates";
 import { GENRES as GENRE_CONTENT } from "../../data/genres";
+import {
+  GENRE_ARTWORK,
+  OPENING_ARTWORK,
+  portraitArtwork,
+} from "../../data/artwork";
 import { NAME_SUGGESTIONS } from "../../data/nameSuggestions";
 import type {
   CandidateContent,
@@ -160,26 +166,53 @@ function OpeningPortrait({
   portrait,
   name,
   size = "regular",
+  decorative = false,
 }: {
   portrait: PortraitResource;
   name: string;
   size?: "compact" | "regular" | "large";
+  decorative?: boolean;
 }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const artwork = portraitArtwork(
+    portrait,
+    size === "large"
+      ? "(max-width: 720px) 34vw, 180px"
+      : "(max-width: 720px) 44vw, 120px",
+  );
   const style: OpeningPortraitStyle = {
     "--opening-portrait-background": portrait.placeholder.background,
     "--opening-portrait-foreground": portrait.placeholder.foreground,
   };
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [portrait.futureAssetPath]);
+
+  const hasImage = portrait.available && !imageFailed;
 
   return (
     <span
       className="opening-portrait"
       data-size={size}
       style={style}
-      role="img"
-      aria-label={portrait.alt}
+      role={decorative ? undefined : "img"}
+      aria-hidden={decorative || undefined}
+      aria-label={decorative ? undefined : portrait.alt}
     >
-      {portrait.available ? (
-        <img src={portrait.futureAssetPath} alt="" />
+      {hasImage ? (
+        <img
+          src={artwork.src}
+          srcSet={artwork.srcSet}
+          sizes={artwork.sizes}
+          width={artwork.width}
+          height={artwork.height}
+          loading="lazy"
+          decoding="async"
+          style={{ objectPosition: artwork.focalPoint }}
+          alt=""
+          onError={() => setImageFailed(true)}
+        />
       ) : (
         <>
           <span className="opening-portrait__light" aria-hidden="true" />
@@ -251,6 +284,7 @@ function CandidateCard({
           portrait={candidate.portrait}
           name={candidate.name}
           size="large"
+          decorative
         />
         <SelectionMark selected={selected} />
       </div>
@@ -433,6 +467,11 @@ export function OpeningFlow({
     content = (
       <div className="opening-identity">
         <section className="opening-identity__story">
+          <ArtworkImage
+            artwork={OPENING_ARTWORK.graduationNight}
+            className="opening-story-art"
+            eager
+          />
           <div className="opening-identity__story-icon" aria-hidden="true">
             <GraduationCapIcon size={35} weight="duotone" />
           </div>
@@ -487,6 +526,7 @@ export function OpeningFlow({
                     <OpeningPortrait
                       portrait={avatar.portrait}
                       name={avatar.label}
+                      decorative
                     />
                     <span className="opening-avatar-option__copy">
                       <strong>{avatar.label}</strong>
@@ -533,6 +573,11 @@ export function OpeningFlow({
                   setValidationMessage(null);
                 }}
               >
+                <ArtworkImage
+                  artwork={GENRE_ARTWORK[item.id]}
+                  className="opening-genre-card__art"
+                  decorative
+                />
                 <span className="opening-genre-card__english">
                   {item.englishLabel}
                 </span>
@@ -587,6 +632,10 @@ export function OpeningFlow({
     content = (
       <div className="opening-naming">
         <section className="opening-naming__form">
+          <ArtworkImage
+            artwork={OPENING_ARTWORK.firstRehearsal}
+            className="opening-naming__art"
+          />
           <p className="opening-kicker">第一次全员会议</p>
           <h2>五个人围着排练室的折叠桌，终于聊到了名字。</h2>
           <p>

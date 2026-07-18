@@ -9,7 +9,23 @@ import {
   VinylRecordIcon,
 } from "@phosphor-icons/react";
 import { useRef } from "react";
-import { Button, Dialog, StatusBadge } from "../../components";
+import {
+  ArtworkImage,
+  Button,
+  Dialog,
+  PortraitPlaceholder,
+  StatusBadge,
+} from "../../components";
+import {
+  LEGACY_PORTRAITS,
+  portraitArtwork,
+  resolveAlbumCover,
+  resolveEndingArtwork,
+  VENUE_ARTWORK,
+  type ArtworkResource,
+} from "../../data/artwork";
+import { PLAYER_AVATARS } from "../../data/avatars";
+import { CANDIDATES } from "../../data/candidates";
 import type {
   EndingMemberSummary,
   EndingReason,
@@ -67,6 +83,8 @@ const EMPTY_CLOSE = () => undefined;
 
 interface MemberFinalView extends EndingMemberSummary {
   status: MemberStatus;
+  avatarId: string;
+  isPlayer: boolean;
 }
 
 export interface EndingExperienceProps {
@@ -140,6 +158,8 @@ function resolveMembers(game: GameState): MemberFinalView[] {
         summary?.headline.trim() || fallbackMemberHeadline(belonging),
       belonging,
       status: member.status,
+      avatarId: member.avatarId,
+      isPlayer: member.isPlayer,
     };
   });
 
@@ -153,10 +173,28 @@ function resolveMembers(game: GameState): MemberFinalView[] {
         summary.headline.trim() || fallbackMemberHeadline(belonging),
       belonging,
       status: "normal",
+      avatarId: summary.memberId,
+      isPlayer: summary.role === "leader",
     });
   }
 
   return members;
+}
+
+function resolveMemberArtwork(member: MemberFinalView): ArtworkResource | undefined {
+  const portrait = member.isPlayer
+    ? PLAYER_AVATARS.find((avatar) => avatar.id === member.avatarId)?.portrait
+    : CANDIDATES.find(
+        (candidate) =>
+          candidate.id === member.avatarId || candidate.id === member.memberId,
+      )?.portrait;
+  if (portrait?.available) {
+    return portraitArtwork(portrait, "64px");
+  }
+  const legacyId = member.avatarId || member.memberId;
+  return Object.hasOwn(LEGACY_PORTRAITS, legacyId)
+    ? LEGACY_PORTRAITS[legacyId as keyof typeof LEGACY_PORTRAITS]
+    : undefined;
 }
 
 function selectRepresentativeAlbum(game: GameState) {
@@ -241,6 +279,10 @@ export function EndingExperience({
   const representativeAlbum = selectRepresentativeAlbum(game);
   const keyPerformance = selectKeyPerformance(game);
   const timeline = selectTimeline(game.history);
+  const heroArtwork = resolveEndingArtwork(title);
+  const representativeAlbumArtwork = resolveAlbumCover(
+    representativeAlbum?.coverId,
+  );
 
   return (
     <Dialog
@@ -283,6 +325,12 @@ export function EndingExperience({
     >
       <article className="ending-experience__poster">
         <header className="ending-experience__hero">
+          <ArtworkImage
+            artwork={heroArtwork}
+            className="ending-experience__hero-art"
+            decorative
+            eager
+          />
           <div className="ending-experience__hero-copy">
             <span className="ending-experience__kicker">FINAL RECORD</span>
             <p className="ending-experience__band-name">{game.band.name}</p>
@@ -363,12 +411,19 @@ export function EndingExperience({
             </div>
             {representativeAlbum ? (
               <div className="ending-experience__feature-card">
-                <div
-                  className="ending-experience__feature-mark"
-                  aria-hidden="true"
-                >
-                  <VinylRecordIcon size={42} weight="thin" />
-                </div>
+                {representativeAlbumArtwork ? (
+                  <ArtworkImage
+                    artwork={representativeAlbumArtwork}
+                    className="ending-experience__feature-mark"
+                  />
+                ) : (
+                  <div
+                    className="ending-experience__feature-mark"
+                    aria-hidden="true"
+                  >
+                    <VinylRecordIcon size={42} weight="thin" />
+                  </div>
+                )}
                 <div>
                   <strong>《{representativeAlbum.title}》</strong>
                   <p>{formatCareerMonth(representativeAlbum.releasedInMonth)}</p>
@@ -407,12 +462,11 @@ export function EndingExperience({
             </div>
             {keyPerformance ? (
               <div className="ending-experience__feature-card">
-                <div
+                <ArtworkImage
+                  artwork={VENUE_ARTWORK[keyPerformance.venueLevel]}
                   className="ending-experience__feature-mark"
-                  aria-hidden="true"
-                >
-                  <MicrophoneStageIcon size={42} weight="thin" />
-                </div>
+                  sizes="72px"
+                />
                 <div>
                   <strong>{keyPerformance.title}</strong>
                   <p>{formatCareerMonth(keyPerformance.month)}</p>
@@ -447,45 +501,52 @@ export function EndingExperience({
             className="ending-experience__member-grid"
             aria-label="五名成员最终状态"
           >
-            {members.map((member) => (
-              <li
-                key={member.memberId}
-                className="ending-experience__member-card"
-              >
-                <header>
-                  <span
-                    className="ending-experience__member-initial"
-                    aria-hidden="true"
-                  >
-                    {member.name.slice(0, 1) || "乐"}
-                  </span>
-                  <div>
-                    <strong>{member.name}</strong>
-                    <span>{ROLE_LABELS[member.role]}</span>
-                  </div>
-                </header>
-                <p>{member.headline}</p>
-                <div className="ending-experience__member-state">
-                  <StatusBadge
-                    tone={belongingTone(member.belonging)}
-                    showIcon={false}
-                  >
-                    归属感 {member.belonging}
-                  </StatusBadge>
-                  <span>状态 {MEMBER_STATUS_LABELS[member.status]}</span>
-                </div>
-                <div
-                  className="ending-experience__belonging"
-                  role="meter"
-                  aria-label={`${member.name}归属感`}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={member.belonging}
+            {members.map((member) => {
+              const artwork = resolveMemberArtwork(member);
+              return (
+                <li
+                  key={member.memberId}
+                  className="ending-experience__member-card"
                 >
-                  <span style={{ width: `${member.belonging}%` }} />
-                </div>
-              </li>
-            ))}
+                  <header>
+                    <PortraitPlaceholder
+                      name={member.name}
+                      size="sm"
+                      src={artwork?.src}
+                      srcSet={artwork?.srcSet}
+                      sizes={artwork?.sizes}
+                      objectPosition={artwork?.focalPoint}
+                      alt={artwork?.alt ?? member.name}
+                      className="ending-experience__member-portrait"
+                    />
+                    <div>
+                      <strong>{member.name}</strong>
+                      <span>{ROLE_LABELS[member.role]}</span>
+                    </div>
+                  </header>
+                  <p>{member.headline}</p>
+                  <div className="ending-experience__member-state">
+                    <StatusBadge
+                      tone={belongingTone(member.belonging)}
+                      showIcon={false}
+                    >
+                      归属感 {member.belonging}
+                    </StatusBadge>
+                    <span>状态 {MEMBER_STATUS_LABELS[member.status]}</span>
+                  </div>
+                  <div
+                    className="ending-experience__belonging"
+                    role="meter"
+                    aria-label={`${member.name}归属感`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={member.belonging}
+                  >
+                    <span style={{ width: `${member.belonging}%` }} />
+                  </div>
+                </li>
+              );
+            })}
           </ol>
         </section>
 

@@ -34,6 +34,7 @@ import {
 } from "react";
 import {
   AttributeMeter,
+  ArtworkImage,
   Button,
   Dialog,
   Feedback,
@@ -45,6 +46,14 @@ import {
   ToastRegion,
 } from "../../components";
 import { ACTIONS, BAND_ACTIONS, PERSONAL_ACTIONS } from "../../data/actions";
+import {
+  ALBUM_COVER_VARIANTS,
+  LEGACY_PORTRAITS,
+  OPENING_ARTWORK,
+  portraitArtwork,
+  resolveAlbumCover,
+  type ArtworkResource,
+} from "../../data/artwork";
 import { PLAYER_AVATARS } from "../../data/avatars";
 import { CANDIDATES } from "../../data/candidates";
 import { GENRES } from "../../data/genres";
@@ -152,12 +161,6 @@ const BAND_TRAINING_STATS: readonly MemberStatKey[] = [
   "popularity",
   "belonging",
 ];
-
-const COVER_VARIANTS = [
-  { id: "stage-light", label: "舞台残光" },
-  { id: "city-noise", label: "城市噪点" },
-  { id: "night-route", label: "夜间公路" },
-] as const;
 
 const ENDING_REASON_LABELS = {
   twentiethAnniversary: "乐队走过二十周年",
@@ -383,7 +386,21 @@ function MemberStatusBadge({ member }: { member: Member }) {
 function memberPortraitResource(member: Member): PortraitResource | undefined {
   return member.isPlayer
     ? PLAYER_AVATARS.find((avatar) => avatar.id === member.avatarId)?.portrait
-    : CANDIDATES.find((candidate) => candidate.id === member.id)?.portrait;
+    : CANDIDATES.find(
+        (candidate) =>
+          candidate.id === member.avatarId || candidate.id === member.id,
+      )?.portrait;
+}
+
+function memberPortraitArtwork(member: Member): ArtworkResource | undefined {
+  const resource = memberPortraitResource(member);
+  if (resource?.available) {
+    return portraitArtwork(resource, "(max-width: 720px) 18vw, 96px");
+  }
+  const legacyId = member.avatarId || member.id;
+  return Object.hasOwn(LEGACY_PORTRAITS, legacyId)
+    ? LEGACY_PORTRAITS[legacyId as keyof typeof LEGACY_PORTRAITS]
+    : undefined;
 }
 
 function WorkstationPortrait({
@@ -394,13 +411,17 @@ function WorkstationPortrait({
   size: "md" | "lg";
 }) {
   const resource = memberPortraitResource(member);
+  const artwork = memberPortraitArtwork(member);
 
   return (
     <PortraitPlaceholder
       name={member.name}
       size={size}
-      src={resource?.available ? resource.futureAssetPath : undefined}
-      alt={resource?.alt ?? member.name}
+      src={artwork?.src}
+      srcSet={artwork?.srcSet}
+      sizes={artwork?.sizes}
+      objectPosition={artwork?.focalPoint}
+      alt={artwork?.alt ?? resource?.alt ?? member.name}
       fallback={resource?.placeholder}
       statusTone={statusTone(member.status)}
       statusLabel={STATUS_LABELS[member.status]}
@@ -524,6 +545,11 @@ function OverviewPage({
   return (
     <div className="ws-page-stack">
       <section className="ws-overview-brief">
+        <ArtworkImage
+          artwork={OPENING_ARTWORK.firstRehearsal}
+          className="ws-overview-brief__art"
+          decorative
+        />
         <div>
           <p className="ws-section-kicker">本月重点</p>
           <h2>
@@ -827,31 +853,38 @@ function AlbumsPage({
           <div className="ws-empty-line">第一张专辑发行后，会在这里保存星级、收听和收益。</div>
         ) : (
           <div className="ws-discography">
-            {[...game.releasedAlbums].reverse().map((album) => (
-              <article key={album.id}>
-                <div
-                  className="ws-album-cover ws-album-cover--released"
-                  data-cover={album.coverId}
-                >
-                  <VinylRecordIcon size={28} weight="fill" />
-                </div>
-                <div>
-                  <h3>{album.title}</h3>
-                  {stars(album.quality)}
-                  <p>第 {album.releasedInMonth} 个月发行</p>
-                </div>
-                <dl>
+            {[...game.releasedAlbums].reverse().map((album) => {
+              const artwork = resolveAlbumCover(album.coverId);
+              return (
+                <article key={album.id}>
+                  {artwork ? (
+                    <ArtworkImage
+                      artwork={artwork}
+                      className="ws-album-cover ws-album-cover--released"
+                    />
+                  ) : (
+                    <div className="ws-album-cover ws-album-cover--released">
+                      <VinylRecordIcon size={28} weight="fill" />
+                    </div>
+                  )}
                   <div>
-                    <dt>首发收听</dt>
-                    <dd>{formatNumber(album.listeners)}</dd>
+                    <h3>{album.title}</h3>
+                    {stars(album.quality)}
+                    <p>第 {album.releasedInMonth} 个月发行</p>
                   </div>
-                  <div>
-                    <dt>净收益</dt>
-                    <dd>{formatCurrency(album.netRevenue)}</dd>
-                  </div>
-                </dl>
-              </article>
-            ))}
+                  <dl>
+                    <div>
+                      <dt>首发收听</dt>
+                      <dd>{formatNumber(album.listeners)}</dd>
+                    </div>
+                    <div>
+                      <dt>净收益</dt>
+                      <dd>{formatCurrency(album.netRevenue)}</dd>
+                    </div>
+                  </dl>
+                </article>
+              );
+            })}
           </div>
         )}
       </section>
@@ -1529,13 +1562,13 @@ function AlbumDialog({
           <fieldset>
             <legend>选择封面</legend>
             <div className="ws-cover-grid">
-              {COVER_VARIANTS.map((cover, index) => {
+              {ALBUM_COVER_VARIANTS.map((cover) => {
                 const resolvedId = `${game.band.genre}-${cover.id}`;
+                const artwork = resolveAlbumCover(resolvedId);
                 return (
                   <label
                     className="ws-cover-choice"
                     data-selected={coverId === resolvedId}
-                    data-variant={index + 1}
                     key={cover.id}
                   >
                     <input
@@ -1544,9 +1577,17 @@ function AlbumDialog({
                       checked={coverId === resolvedId}
                       onChange={() => onCoverChange(resolvedId)}
                     />
-                    <span>
-                      <VinylRecordIcon size={30} weight="fill" />
-                    </span>
+                    {artwork ? (
+                      <ArtworkImage
+                        artwork={artwork}
+                        className="ws-cover-choice__art"
+                        decorative
+                      />
+                    ) : (
+                      <span>
+                        <VinylRecordIcon size={30} weight="fill" />
+                      </span>
+                    )}
                     <strong>{cover.label}</strong>
                   </label>
                 );
@@ -1876,7 +1917,9 @@ export function Workstation({
       NAME_SUGGESTIONS[currentGame.band.genre].albumNames[0] ??
       "未命名专辑";
     setAlbumTitle(defaultTitle);
-    setAlbumCoverId(`${currentGame.band.genre}-${COVER_VARIANTS[0].id}`);
+    setAlbumCoverId(
+      `${currentGame.band.genre}-${ALBUM_COVER_VARIANTS[0].id}`,
+    );
     setDialog("album");
   }
 

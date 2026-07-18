@@ -17,7 +17,8 @@ import {
   XCircleIcon,
 } from "@phosphor-icons/react";
 import { useState, type ReactNode } from "react";
-import { Button, Panel, StatusBadge } from "../../components";
+import { ArtworkImage, Button, Panel, StatusBadge } from "../../components";
+import { VENUE_ARTWORK } from "../../data/artwork";
 import {
   CAREER_VENUE_LEVELS,
   EQUIPMENT_CATALOG,
@@ -274,6 +275,10 @@ export function CareerPerformancePanel({
                       第 {invitation.expiresAtMonth} 月截止
                     </span>
                   </div>
+                  <ArtworkImage
+                    artwork={VENUE_ARTWORK[invitation.venueLevel]}
+                    className="career-venue-art career-venue-art--offer"
+                  />
                   <div className="career-offer-card__title">
                     <span className="career-offer-card__icon">
                       <MicrophoneStageIcon
@@ -362,6 +367,12 @@ export function CareerPerformancePanel({
                 <div className="career-route__marker">
                   <span>{venue.level}</span>
                 </div>
+                <ArtworkImage
+                  artwork={VENUE_ARTWORK[venue.level]}
+                  className="career-venue-art career-venue-art--route"
+                  decorative
+                  sizes="(max-width: 48rem) calc(100vw - 7rem), 128px"
+                />
                 <div className="career-route__content">
                   <div>
                     <h4>{venue.name}</h4>
@@ -422,6 +433,10 @@ export function CareerPerformancePanel({
                 data-locked={!unlocked}
                 key={venue.id}
               >
+                <ArtworkImage
+                  artwork={VENUE_ARTWORK[venue.level]}
+                  className="career-venue-art career-venue-art--self"
+                />
                 <div className="career-self-card__header">
                   <span>{venue.level}</span>
                   <div>
@@ -489,6 +504,12 @@ export function CareerPerformancePanel({
           <div className="career-performance-history">
             {records.map((record) => (
               <article key={record.id}>
+                <ArtworkImage
+                  artwork={VENUE_ARTWORK[record.venueLevel]}
+                  className="career-venue-art career-venue-art--history"
+                  decorative
+                  sizes="(max-width: 48rem) calc(100vw - 3rem), 88px"
+                />
                 <div className="career-performance-history__date">
                   <span>第 {record.month} 月</span>
                   <strong>{record.venueLevel} 级</strong>

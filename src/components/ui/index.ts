@@ -1,4 +1,5 @@
 export * from "./AttributeMeter";
+export * from "./ArtworkImage";
 export * from "./Button";
 export * from "./Dialog";
 export * from "./Feedback";

@@ -226,12 +226,30 @@
   opacity: 0.55;
 }
 
+.opening-story-art {
+  z-index: 1;
+  aspect-ratio: 3 / 2;
+  margin: calc(-1 * clamp(1.5rem, 3vw, 2.25rem));
+  margin-bottom: var(--bb-space-5);
+  border-bottom: 1px solid var(--bb-color-border-strong);
+}
+
+.opening-story-art::after,
+.opening-genre-card__art::after,
+.opening-naming__art::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 58%, rgb(10 12 16 / 68%));
+}
+
 .opening-identity__story-icon {
   display: grid;
   width: 3.5rem;
   height: 3.5rem;
   place-items: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   border: 1px solid var(--bb-color-border-strong);
   border-radius: var(--bb-radius-control);
   color: var(--bb-color-accent);
@@ -522,6 +540,15 @@
   opacity: 1;
 }
 
+.opening-genre-card__art {
+  aspect-ratio: 16 / 7;
+  margin:
+    calc(-1 * clamp(1.2rem, 2.5vw, 1.65rem))
+    calc(-1 * clamp(1.2rem, 2.5vw, 1.65rem))
+    var(--bb-space-2);
+  border-bottom: 1px solid var(--bb-color-border);
+}
+
 .opening-genre-card__english {
   color: var(--opening-option-accent);
   font-family: var(--bb-font-mono);
@@ -701,6 +728,14 @@
 .opening-naming__form {
   display: grid;
   gap: var(--bb-space-5);
+}
+
+.opening-naming__art {
+  width: min(100%, 34rem);
+  aspect-ratio: 16 / 7;
+  border: 1px solid var(--bb-color-border);
+  border-radius: var(--bb-radius-panel);
+  box-shadow: var(--bb-shadow-panel);
 }
 
 .opening-naming__form .opening-field {

@@ -776,3 +776,31 @@
     backdrop-filter: none;
   }
 }
+.bb-artwork {
+  position: relative;
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--bb-color-text-subtle);
+  background:
+    radial-gradient(circle at 70% 20%, var(--bb-color-accent-soft), transparent 55%),
+    var(--bb-color-surface-inset);
+}
+
+.bb-artwork__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bb-artwork__fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--bb-space-4);
+  font-family: var(--bb-font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+}

@@ -1,12 +1,42 @@
 import { useState } from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AttributeMeter } from "./AttributeMeter";
+import { ArtworkImage } from "./ArtworkImage";
 import { Button } from "./Button";
 import { Dialog } from "./Dialog";
 import { Tabs } from "./Tabs";
 
 describe("UI foundation", () => {
+  it("lazy-loads responsive artwork and falls back after a request error", () => {
+    const { container } = render(
+      <ArtworkImage
+        artwork={{
+          src: "/art.webp",
+          srcSet: "/art-512.webp 512w, /art.webp 1536w",
+          sizes: "90vw",
+          alt: "排练室插图",
+          width: 1536,
+          height: 864,
+          focalPoint: "60% 40%",
+        }}
+      />,
+    );
+
+    const wrapper = screen.getByRole("img", { name: "排练室插图" });
+    const image = container.querySelector("img");
+    expect(image).toHaveAttribute("loading", "lazy");
+    expect(image).toHaveAttribute("decoding", "async");
+    expect(image).toHaveAttribute(
+      "srcset",
+      "/art-512.webp 512w, /art.webp 1536w",
+    );
+    expect(image).toHaveStyle({ objectPosition: "60% 40%" });
+
+    fireEvent.error(image!);
+    expect(wrapper).toHaveTextContent("插图暂不可用");
+  });
+
   it("exposes loading state on buttons", () => {
     render(<Button loading loadingLabel="保存中">保存</Button>);
 

@@ -1,4 +1,5 @@
 export * from "./actions";
+export * from "./artwork";
 export * from "./avatars";
 export * from "./career";
 export * from "./candidates";

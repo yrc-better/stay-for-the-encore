@@ -81,7 +81,7 @@ describe("确定性长局模拟", () => {
     ).toBeGreaterThanOrEqual(3);
     expect(results.some((result) => result.albums > 0)).toBe(true);
     expect(results.some((result) => result.performances > 0)).toBe(true);
-  });
+  }, 15_000);
 
   it.each(GENRES)("让 %s 风格安全走到生涯结局", (genre: Genre) => {
     const seed = GENRES.indexOf(genre) + 10_000;

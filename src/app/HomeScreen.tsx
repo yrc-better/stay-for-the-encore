@@ -9,7 +9,15 @@ import {
   TrashIcon,
   UploadSimpleIcon,
 } from "@phosphor-icons/react";
-import { Button, Dialog, Feedback, Panel, StatusBadge } from "../components";
+import {
+  ArtworkImage,
+  Button,
+  Dialog,
+  Feedback,
+  Panel,
+  StatusBadge,
+} from "../components";
+import { OPENING_ARTWORK } from "../data";
 import type { ExportResult, SaveResult } from "../persistence";
 
 interface HomeScreenProps {
@@ -72,6 +80,12 @@ export function HomeScreen({
     <main className="home-shell">
       <section className="home-hero" aria-labelledby="game-title">
         <div className="home-hero__copy">
+          <ArtworkImage
+            artwork={OPENING_ARTWORK.graduationNight}
+            className="home-hero__art"
+            decorative
+            eager
+          />
           <div className="home-kicker">
             <GuitarIcon size={18} weight="fill" aria-hidden="true" />
             <span>乐队后台工作站</span>
@@ -201,6 +215,12 @@ export function HomeScreen({
             )}
           </div>
           {saveMessage && <p className="home-save-tools__message">{saveMessage}</p>}
+          <p className="home-credits">
+            角色手绘与摄影素材均已按许可使用。
+            <a href="/credits.html" target="_blank" rel="noreferrer">
+              查看素材来源与许可
+            </a>
+          </p>
         </Panel>
       </section>
 

@@ -29,7 +29,7 @@ function createEndedGame(): GameState {
       {
         id: "album-tide",
         title: "逆流而上",
-        coverId: "cover-1",
+        coverId: "indie-stage-light",
         quality: 4.8,
         releasedInMonth: 37,
         listeners: 128_000,
@@ -114,6 +114,17 @@ describe("EndingExperience", () => {
     ).not.toBeInTheDocument();
     expect(within(dialog).getByText("《逆流而上》")).toBeInTheDocument();
     expect(
+      dialog.querySelector(
+        'img[src="/assets/albums/indie/stage-light.webp"]',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      dialog.querySelector('img[src="/assets/venues/level-5.webp"]'),
+    ).toBeInTheDocument();
+    expect(
+      dialog.querySelector('img[src="/assets/endings/evergreen-band.webp"]'),
+    ).toBeInTheDocument();
+    expect(
       within(dialog).getAllByText("万人体育馆终场").length,
     ).toBeGreaterThanOrEqual(1);
 
@@ -121,6 +132,7 @@ describe("EndingExperience", () => {
       name: "五名成员最终状态",
     });
     expect(within(memberList).getAllByRole("listitem")).toHaveLength(5);
+    expect(memberList.querySelectorAll("img")).toHaveLength(5);
     for (const member of game.members) {
       expect(within(memberList).getByText(member.name)).toBeInTheDocument();
     }

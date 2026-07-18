@@ -78,6 +78,7 @@
 .home-shell {
   display: grid;
   min-height: 100dvh;
+  overflow-x: clip;
   place-items: center;
   padding: clamp(1.5rem, 4vw, 4.5rem);
 }
@@ -91,7 +92,27 @@
 }
 
 .home-hero__copy {
+  position: relative;
+  z-index: 1;
   min-width: 0;
+}
+
+.home-hero__art {
+  position: absolute;
+  inset: -5rem -4rem auto 26%;
+  z-index: -1;
+  height: min(43vw, 31rem);
+  border-radius: 50%;
+  opacity: 0.34;
+  filter: saturate(0.82) contrast(1.08);
+  mask-image: radial-gradient(circle at 58% 45%, #000 0 38%, transparent 72%);
+}
+
+.home-hero__art::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(90deg, var(--bb-color-canvas), transparent 54%);
 }
 
 .home-kicker {
@@ -264,6 +285,23 @@
   font-size: 0.82rem;
 }
 
+.home-credits {
+  margin: 12px 0 0;
+  color: var(--bb-color-text-subtle);
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.home-credits a {
+  margin-left: 0.35rem;
+  color: var(--bb-color-accent-hover);
+  text-underline-offset: 0.18em;
+}
+
+.home-credits a:hover {
+  color: var(--bb-color-text);
+}
+
 .home-save-state svg {
   flex: 0 0 auto;
   color: var(--bb-color-accent-hover);
@@ -318,6 +356,24 @@
 .month-event-result {
   display: grid;
   gap: 1.15rem;
+}
+
+.month-event__art {
+  aspect-ratio: 16 / 7;
+  margin-bottom: 1.15rem;
+  border: 1px solid var(--bb-color-border-strong);
+  border-radius: var(--bb-radius-control);
+  box-shadow: 0 1rem 2.5rem rgb(0 0 0 / 24%);
+}
+
+.month-event__art::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 54%, rgb(7 10 13 / 70%)),
+    linear-gradient(90deg, var(--bb-color-accent-soft), transparent 42%);
 }
 
 .month-event__story,

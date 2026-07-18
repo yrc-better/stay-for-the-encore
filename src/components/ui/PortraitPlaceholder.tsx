@@ -9,7 +9,10 @@ import { classNames } from "./classNames";
 export interface PortraitPlaceholderProps {
   name: string;
   src?: string;
+  srcSet?: string;
+  sizes?: string;
   alt?: string;
+  objectPosition?: string;
   size?: "sm" | "md" | "lg" | "xl";
   statusTone?: "neutral" | "positive" | "warning" | "danger";
   statusLabel?: string;
@@ -48,7 +51,10 @@ function initialsFromName(name: string): string {
 export function PortraitPlaceholder({
   name,
   src,
+  srcSet,
+  sizes,
   alt,
+  objectPosition,
   size = "md",
   statusTone,
   statusLabel,
@@ -82,7 +88,14 @@ export function PortraitPlaceholder({
         <img
           className="bb-portrait__image"
           src={src}
+          srcSet={srcSet}
+          sizes={sizes}
           alt=""
+          width={1024}
+          height={1024}
+          loading="lazy"
+          decoding="async"
+          style={objectPosition ? { objectPosition } : undefined}
           onError={() => setImageFailed(true)}
         />
       ) : (

@@ -30,8 +30,8 @@ export interface PortraitPlaceholder {
 export interface PortraitResource {
   alt: string;
   /**
-   * Reserved path for the final illustration. Until that file exists, clients
-   * should render `placeholder` and may use `artDirection` as an image prompt.
+   * Production asset path. Clients retain `placeholder` only as a defensive
+   * fallback for offline caches or failed image requests.
    */
   futureAssetPath: string;
   available: boolean;

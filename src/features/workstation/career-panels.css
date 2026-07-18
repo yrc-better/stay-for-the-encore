@@ -134,6 +134,28 @@
   font-size: 0.68rem;
 }
 
+.career-venue-art {
+  border: 1px solid var(--bb-color-border-strong);
+  border-radius: var(--bb-radius-control);
+}
+
+.career-venue-art::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 52%, rgb(5 8 11 / 68%));
+}
+
+.career-venue-art--offer,
+.career-venue-art--self {
+  aspect-ratio: 16 / 7;
+}
+
+.career-self-card[data-locked="true"] .career-venue-art {
+  filter: grayscale(0.8) brightness(0.7);
+}
+
 .career-offer-card__title,
 .career-contract-title,
 .career-equipment-card__heading {
@@ -317,9 +339,17 @@
   position: relative;
   display: grid;
   min-width: 0;
-  grid-template-columns: 2.5rem minmax(0, 1fr);
+  grid-template-columns: 2.5rem minmax(6rem, 8rem) minmax(0, 1fr);
   gap: var(--bb-space-4);
   padding: var(--bb-space-3) 0;
+}
+
+.career-venue-art--route {
+  aspect-ratio: 8 / 5;
+}
+
+.career-route__stop:not([data-unlocked="true"]) .career-venue-art--route {
+  filter: grayscale(0.9) brightness(0.64);
 }
 
 .career-route__stop:not(:last-child)::before {
@@ -466,11 +496,16 @@
 .career-performance-history > article {
   display: grid;
   min-width: 0;
-  grid-template-columns: 5rem minmax(0, 1fr) minmax(15rem, 0.9fr);
+  grid-template-columns: 5.5rem 4.5rem minmax(0, 1fr) minmax(15rem, 0.9fr);
   align-items: center;
   gap: var(--bb-space-4);
   padding: var(--bb-space-4) var(--bb-space-5);
   border-bottom: 1px solid var(--bb-color-border);
+}
+
+.career-venue-art--history {
+  width: 5.5rem;
+  aspect-ratio: 8 / 5;
 }
 
 .career-performance-history > article:last-child {
@@ -747,7 +782,7 @@
 
 @media (max-width: 70rem) {
   .career-performance-history > article {
-    grid-template-columns: 4.5rem minmax(0, 1fr);
+    grid-template-columns: 5.5rem 4.5rem minmax(0, 1fr);
   }
 
   .career-performance-history__numbers {
@@ -771,6 +806,26 @@
 
   .career-performance-history > article {
     grid-template-columns: 1fr;
+  }
+
+  .career-venue-art--history {
+    width: 100%;
+    aspect-ratio: 16 / 7;
+  }
+
+  .career-route__stop {
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: var(--bb-space-3);
+  }
+
+  .career-venue-art--route,
+  .career-route__content {
+    grid-column: 2;
+  }
+
+  .career-venue-art--route {
+    width: 100%;
+    aspect-ratio: 16 / 7;
   }
 
   .career-performance-history__numbers {
