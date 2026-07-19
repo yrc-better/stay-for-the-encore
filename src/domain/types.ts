@@ -138,6 +138,7 @@ export interface CurrentMonthState {
   feedback: ActionFeedback[];
   eventPrepared: boolean;
   opportunitiesPrepared: boolean;
+  opportunitiesAcknowledged: boolean;
   performanceInvitations: PerformanceInvitation[];
   commercialOffers: CommercialOffer[];
   contractOffers: ContractOffer[];

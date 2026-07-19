@@ -50,6 +50,86 @@ const ACTION_TITLES: Readonly<Record<ActionId, string>> = {
   teamBuilding: "团建",
 };
 
+const EXTRA_FUNDS_LABEL = `¥${ACTION_EXTRA_FUNDS_CHANGE.toLocaleString(
+  "zh-CN",
+)}`;
+
+const ACTION_EXTRA_STORIES: Readonly<
+  Record<ActionId, Readonly<Record<ActionExtraKind, string>>>
+> = {
+  personalTraining: {
+    positive: `收琴前，排练室老板免掉一部分场地费，意外省下 ${EXTRA_FUNDS_LABEL}。`,
+    negative: `一根旧琴弦在最后一轮练习中断掉，更换和维护多花了 ${EXTRA_FUNDS_LABEL}。`,
+    narrative:
+      "反复弹错的那一小节终于顺了，主角把新的指法记在了谱页边角。",
+    none: "节拍器从头响到尾，训练没有惊喜，也没有偏离计划。",
+  },
+  social: {
+    positive: `新认识的乐手介绍了更便宜的场地，为公共账户省下 ${EXTRA_FUNDS_LABEL}。`,
+    negative: `临时聚会比预计更花钱，公共账户多支出了 ${EXTRA_FUNDS_LABEL}。`,
+    narrative:
+      "散场后的一次长谈没有带来合作，却让主角听见了另一种做音乐的理由。",
+    none: "名片和联系方式收进了口袋，新的关系还需要时间发酵。",
+  },
+  partTime: {
+    positive: `临时班次提前结束，雇主仍按整班结算，额外留下 ${EXTRA_FUNDS_LABEL}。`,
+    negative:
+      "兼职收尾比预想更辛苦，主角状态额外下降一级，但收入完整到账。",
+    narrative:
+      "下班路上，主角在手机里哼下一段旋律，疲惫里也留下了一点创作的火花。",
+    none: "班次平稳结束，工资到账，主角赶上了回排练室的末班车。",
+  },
+  rest: {
+    positive: `一笔早先的押金意外退回，公共账户多了 ${EXTRA_FUNDS_LABEL}。`,
+    negative: `临时处理生活琐事多花了 ${EXTRA_FUNDS_LABEL}，休息时间仍然保住了。`,
+    narrative:
+      "没有排练和会议的一天里，主角重新听完了那张影响自己最深的专辑。",
+    none: "手机被调成静音，主角安稳睡了一觉，也暂时不去想下一场演出。",
+  },
+  bandTraining: {
+    positive: `训练场地临时给了熟客折扣，为乐队省下 ${EXTRA_FUNDS_LABEL}。`,
+    negative: `临时补买练习耗材，多支出了 ${EXTRA_FUNDS_LABEL}，训练仍按计划完成。`,
+    narrative:
+      "队友在一次次重复里找到了自己的发力方式，结束后主动要求再来一遍。",
+    none: "训练表上的项目逐项完成，队友把今天的问题记进了自己的笔记。",
+  },
+  rehearsal: {
+    positive: `排练室免掉了超时费用，乐队省下 ${EXTRA_FUNDS_LABEL}。`,
+    negative: `排练中更换了一批损耗配件，公共账户多支出 ${EXTRA_FUNDS_LABEL}。`,
+    narrative:
+      "最后一次合奏结束后，没有人立刻说话，大家都听见了歌曲终于成形的瞬间。",
+    none: "从第一首到最后一首，整套曲目完整走了一遍，问题也被逐一记下。",
+  },
+  albumProduction: {
+    positive: `录音棚主动调整了报价，本轮制作省下 ${EXTRA_FUNDS_LABEL}。`,
+    negative: `临时补录和设备租用多花了 ${EXTRA_FUNDS_LABEL}，制作进度没有受影响。`,
+    narrative:
+      "一段原本准备删掉的声音被留了下来，它让这张专辑第一次有了自己的呼吸。",
+    none: "工程文件按版本存好，今天推进的每一轨都留在了专辑里。",
+  },
+  performance: {
+    positive: `场地方为现场反响追加了 ${EXTRA_FUNDS_LABEL} 奖励。`,
+    negative: `返场后的运输和维护多花了 ${EXTRA_FUNDS_LABEL}，演出结果仍然有效。`,
+    narrative:
+      "最后一个和弦落下时，台下有个陌生人准确唱出了副歌，几个人在后台记了很久。",
+    none: "灯光熄灭，设备装车，这场演出按照既定流程平稳收尾。",
+  },
+  promotion: {
+    positive: `平台返还了一部分推广额度，公共账户省下 ${EXTRA_FUNDS_LABEL}。`,
+    negative: `临时追加素材制作，多支出了 ${EXTRA_FUNDS_LABEL}，宣传仍如期上线。`,
+    narrative:
+      "一条不起眼的留言认真写下了听歌感受，成员们在群里来回看了好几遍。",
+    none: "内容按时发出，数据缓慢上涨，新的听众正在一点点靠近。",
+  },
+  teamBuilding: {
+    positive: `活动结束后退回了一笔预付款，公共账户收回 ${EXTRA_FUNDS_LABEL}。`,
+    negative: `临时改动安排多花了 ${EXTRA_FUNDS_LABEL}，大家的兴致没有被打断。`,
+    narrative:
+      "没有人谈工作，直到散场前才有人轻声说，这支乐队已经越来越像一个共同生活。",
+    none: "大家难得把排练表放到一边，轻松度过了没有任务的一晚。",
+  },
+};
+
 function failure(
   state: GameState,
   code: DomainFailure["code"],
@@ -159,19 +239,10 @@ function rollActionExtra(
     kind = "none";
   }
 
-  const messageByKind: Record<ActionExtraKind, string> = {
-    positive: `这次行动格外顺利，临时节省了 ¥${ACTION_EXTRA_FUNDS_CHANGE.toLocaleString(
-      "zh-CN",
-    )}。`,
-    negative: "行动中出现了小插曲，但固定成长仍然完整生效。",
-    narrative: "行动留下了一段值得记住的小故事，没有额外数值变化。",
-    none: "本次行动按计划完成，没有额外结果。",
-  };
-
   return {
     kind,
     roll: Math.round(roll * 100) / 100,
-    message: messageByKind[kind],
+    message: ACTION_EXTRA_STORIES[command.type][kind],
   };
 }
 
@@ -192,11 +263,12 @@ function applyActionExtraEffect(
         extra.message = "兼职收尾比预想更辛苦，主角状态额外下降一级，但收入完整到账。";
         return;
       }
+      addFunds(state, -ACTION_EXTRA_FUNDS_CHANGE, effects);
+      extra.message = `主角已经累到极限，兼职收尾时只好从收入里拿出 ${EXTRA_FUNDS_LABEL} 处理恢复和补给。`;
+      return;
     }
     addFunds(state, -ACTION_EXTRA_FUNDS_CHANGE, effects);
-    extra.message = `临时状况带来 ¥${ACTION_EXTRA_FUNDS_CHANGE.toLocaleString(
-      "zh-CN",
-    )} 额外支出，但固定成长仍然完整生效。`;
+    extra.message = ACTION_EXTRA_STORIES[command.type].negative;
   }
 }
 

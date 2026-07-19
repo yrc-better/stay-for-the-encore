@@ -148,6 +148,11 @@ export function migrateV1State(input: unknown): MigrationCandidate | null {
           "opportunitiesPrepared",
           false,
         ),
+        opportunitiesAcknowledged: valueOrDefault(
+          month,
+          "opportunitiesAcknowledged",
+          false,
+        ),
         performanceInvitations: valueOrDefault(
           month,
           "performanceInvitations",
@@ -402,6 +407,7 @@ export function migrateLegacyHeadSave(input: unknown): MigrationCandidate | null
         feedback: [],
         eventPrepared: false,
         opportunitiesPrepared: false,
+        opportunitiesAcknowledged: false,
         performanceInvitations: [],
         commercialOffers: [],
         contractOffers: [],

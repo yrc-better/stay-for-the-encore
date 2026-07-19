@@ -111,6 +111,7 @@ export interface GameStoreState {
   startNewGame(input: NewGameInput): GameState;
   performAction(command: ActionCommand): ActionExecution | null;
   prepareEvent(candidateIds: readonly string[]): string | null;
+  acknowledgeOpportunities(): GameState | null;
   resolveEvent(selection: EventChoiceSelection): EventResolutionResult | null;
   acceptCommercialOffer(offerId: string): CareerMutationResult | null;
   declineCommercialOffer(offerId: string): CareerMutationResult | null;
@@ -194,6 +195,26 @@ function createStoreState(
         lastError: null,
       });
       return nextGame.pendingEvent;
+    },
+
+    acknowledgeOpportunities() {
+      const game = get().game;
+      if (!game || game.month.opportunitiesAcknowledged) {
+        return game;
+      }
+
+      const nextGame: GameState = {
+        ...game,
+        month: {
+          ...game.month,
+          opportunitiesAcknowledged: true,
+        },
+      };
+      set({
+        game: nextGame,
+        lastError: null,
+      });
+      return nextGame;
     },
 
     resolveEvent(selection) {

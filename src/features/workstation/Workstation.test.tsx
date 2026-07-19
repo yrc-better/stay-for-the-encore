@@ -51,8 +51,15 @@ describe("后台工作站", () => {
       }),
     );
 
+    const resultDialog = screen.getByRole("dialog", { name: "兼职" });
+    expect(resultDialog).toHaveTextContent("兼职收入存入乐队公共账户");
+    expect(resultDialog).toHaveTextContent("资金+¥3,000");
+    expect(resultDialog).toHaveTextContent("状态-1级");
     expect(useGameStore.getState().game?.band.funds).toBe(13_000);
     expect(useGameStore.getState().game?.month.actionPointsRemaining).toBe(2);
+    await user.click(
+      within(resultDialog).getByRole("button", { name: "继续本月" }),
+    );
     expect(
       within(partTimeCard as HTMLElement).getByRole("button", {
         name: "本月已执行",
@@ -113,6 +120,12 @@ describe("后台工作站", () => {
       }),
     );
 
+    const resultDialog = screen.getByRole("dialog", { name: "成员训练" });
+    expect(resultDialog).toHaveTextContent("状态变化");
+    await user.click(
+      within(resultDialog).getByRole("button", { name: "继续本月" }),
+    );
+
     const usedButtons = screen.getAllByRole("button", { name: "本月已执行" });
     expect(usedButtons).toHaveLength(4);
     usedButtons.forEach((button) => expect(button).toBeDisabled());
@@ -155,6 +168,58 @@ describe("后台工作站", () => {
     const dialog = screen.getByRole("dialog", { name: "乐队生涯履历" });
     expect(within(dialog).getByText("乐队成立")).toBeInTheDocument();
     expect(within(dialog).getByText("第 0 月")).toBeInTheDocument();
+  });
+
+  it("本月机会和本月动态通过弹窗回看", async () => {
+    const user = userEvent.setup();
+    render(<Workstation />);
+
+    await user.click(screen.getByRole("button", { name: /本月机会/ }));
+    const opportunityDialog = screen.getByRole("dialog", {
+      name: "本月机会",
+    });
+    expect(opportunityDialog).toHaveTextContent("这个月没有新的邀约");
+    await user.click(
+      within(opportunityDialog).getByRole("button", { name: "返回工作台" }),
+    );
+
+    const partTimeCard = screen.getByRole("heading", { name: "兼职" }).closest(
+      "article",
+    );
+    await user.click(
+      within(partTimeCard as HTMLElement).getByRole("button", {
+        name: "执行",
+      }),
+    );
+    await user.click(
+      within(screen.getByRole("dialog", { name: "兼职" })).getByRole(
+        "button",
+        { name: "继续本月" },
+      ),
+    );
+
+    await user.click(screen.getByRole("button", { name: /本月动态/ }));
+    const dynamicsDialog = screen.getByRole("dialog", { name: "本月动态" });
+    expect(within(dynamicsDialog).getByText("兼职")).toBeInTheDocument();
+    expect(dynamicsDialog).toHaveTextContent("资金+¥3,000");
+  });
+
+  it("演出完成后弹出剧情并展示全部成员变化", async () => {
+    const user = userEvent.setup();
+    render(<Workstation />);
+
+    await user.click(screen.getByRole("tab", { name: "演出" }));
+    const performanceButton = screen.getAllByRole("button", {
+      name: /安排.*自主演出/,
+    })[0];
+    await user.click(performanceButton);
+
+    const resultDialog = screen.getByRole("dialog", { name: "演出" });
+    expect(resultDialog).toHaveTextContent(/小型.*演出/);
+    expect(resultDialog).toHaveTextContent("资金");
+    expect(within(resultDialog).getByRole("list").children.length).toBeGreaterThan(
+      6,
+    );
   });
 
   it("从任意工作页保存后都会显示全局存档提示", async () => {

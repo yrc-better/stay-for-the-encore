@@ -110,6 +110,7 @@ export function createInitialGameState(input: NewGameInput): GameState {
       feedback: [],
       eventPrepared: false,
       opportunitiesPrepared: false,
+      opportunitiesAcknowledged: false,
       performanceInvitations: [],
       commercialOffers: [],
       contractOffers: [],

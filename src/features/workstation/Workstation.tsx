@@ -1,4 +1,5 @@
 import {
+  ArrowRightIcon,
   CalendarBlankIcon,
   CampfireIcon,
   ChatsCircleIcon,
@@ -69,6 +70,10 @@ import { NAME_SUGGESTIONS } from "../../data/nameSuggestions";
 import type { PortraitResource } from "../../data/types";
 import { LEVEL_ONE_VENUES } from "../../data/venues";
 import {
+  countMonthOpportunities,
+  MonthOpportunityDialog,
+} from "../../app/MonthOpportunityDialog";
+import {
   selectBandAttributes,
   selectPlayer,
   selectTeammates,
@@ -111,11 +116,13 @@ type WorkstationDialog =
   | "personalTraining"
   | "bandTraining"
   | "album"
-  | "performance"
   | "abandonAlbum"
   | "endMonth"
   | "history"
   | "settings"
+  | "opportunities"
+  | "dynamics"
+  | "actionResult"
   | null;
 
 type WorkstationAction = (typeof ACTIONS)[number];
@@ -1217,7 +1224,7 @@ function FeedbackCard({
       tone={feedbackTone(feedback)}
       title={feedback.title}
       description={feedback.messages.join(" ")}
-      changes={feedback.effects.slice(0, 6).map((effect) => ({
+      changes={feedback.effects.map((effect) => ({
         label: effectLabel(effect, game),
         value: effectValue(effect),
         direction:
@@ -1227,24 +1234,175 @@ function FeedbackCard({
   );
 }
 
-function MonthRail({
+function ActionResultDialog({
+  feedback,
   game,
-  lastFeedback,
+  onContinue,
+}: {
+  feedback: ActionFeedback;
+  game: GameState;
+  onContinue: () => void;
+}) {
+  const changesTitleId = useId();
+
+  return (
+    <Dialog
+      open
+      onClose={() => undefined}
+      closeOnBackdrop={false}
+      showCloseButton={false}
+      title={feedback.title}
+      description={`行动结果，消耗 ${feedback.actionPointsSpent} 个行动点。`}
+      size="md"
+      footer={
+        <Button
+          variant="primary"
+          icon={<ArrowRightIcon size={18} weight="bold" aria-hidden="true" />}
+          iconPosition="end"
+          onClick={onContinue}
+        >
+          继续本月
+        </Button>
+      }
+    >
+      <div className="ws-action-result" data-tone={feedbackTone(feedback)}>
+        <div className="ws-action-result__story">
+          <span aria-hidden="true">{ACTION_ICONS[feedback.actionId]}</span>
+          <div>
+            {feedback.messages.map((message, index) => (
+              <p key={`${feedback.actionId}-story-${index}`}>{message}</p>
+            ))}
+          </div>
+        </div>
+
+        <section
+          className="ws-action-result__changes"
+          aria-labelledby={changesTitleId}
+        >
+          <div>
+            <h3 id={changesTitleId}>状态变化</h3>
+            <span>{feedback.effects.length} 项</span>
+          </div>
+          {feedback.effects.length > 0 ? (
+            <ul>
+              {feedback.effects.map((effect, index) => (
+                <li
+                  key={`${effect.target}-${effect.label}-${index}`}
+                  data-direction={
+                    effect.amount > 0
+                      ? "up"
+                      : effect.amount < 0
+                        ? "down"
+                        : "neutral"
+                  }
+                >
+                  <span>{effectLabel(effect, game)}</span>
+                  <strong>{effectValue(effect)}</strong>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="ws-action-result__unchanged">没有额外数值变化。</p>
+          )}
+        </section>
+      </div>
+    </Dialog>
+  );
+}
+
+function MonthDynamicsDialog({
+  game,
   lastError,
   lastMonthSummary,
+  onClose,
+}: {
+  game: GameState;
+  lastError: string | null;
+  lastMonthSummary: ReturnType<typeof useGameStore.getState>["lastMonthSummary"];
+  onClose: () => void;
+}) {
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title="本月动态"
+      description={`第 ${game.calendar.year} 年 ${game.calendar.month} 月，回看已经发生的行动与状态变化。`}
+      size="lg"
+      footer={
+        <Button variant="primary" onClick={onClose}>
+          返回工作台
+        </Button>
+      }
+    >
+      <div className="ws-dynamics-dialog">
+        {lastError && (
+          <Feedback
+            tone="danger"
+            role="alert"
+            title="最近一次行动未完成"
+            description={lastError}
+          />
+        )}
+
+        {lastMonthSummary && game.month.feedback.length === 0 && (
+          <Feedback
+            tone="info"
+            title={`第 ${lastMonthSummary.completedMonth} 个月已结算`}
+            description={[
+              `扣除运营费 ${formatCurrency(lastMonthSummary.operatingCost)}，月末余额 ${formatCurrency(lastMonthSummary.fundsAfterSettlement)}。`,
+              lastMonthSummary.contractMessage,
+              lastMonthSummary.newVenueLevel
+                ? `永久解锁 ${lastMonthSummary.newVenueLevel} 级场地。`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          />
+        )}
+
+        {game.month.feedback.length > 0 ? (
+          <div className="ws-dynamics-dialog__list">
+            {[...game.month.feedback].reverse().map((feedback, index) => (
+              <FeedbackCard
+                key={`${feedback.actionId}-${index}`}
+                feedback={feedback}
+                game={game}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="ws-dynamics__empty">
+            <ListChecksIcon size={30} weight="duotone" aria-hidden="true" />
+            <p>这个月还没有执行行动。</p>
+          </div>
+        )}
+      </div>
+    </Dialog>
+  );
+}
+
+function MonthRail({
+  game,
+  onOpenOpportunities,
+  onOpenDynamics,
   onEndMonth,
 }: {
   game: GameState;
-  lastFeedback: ActionFeedback | null;
-  lastError: string | null;
-  lastMonthSummary: ReturnType<typeof useGameStore.getState>["lastMonthSummary"];
+  onOpenOpportunities: () => void;
+  onOpenDynamics: () => void;
   onEndMonth: () => void;
 }) {
-  const opportunityCount =
-    game.month.performanceInvitations.length +
-    game.month.commercialOffers.length +
-    game.month.contractOffers.length;
+  const opportunityCount = countMonthOpportunities(game);
   const crises = [
+    ...(game.activeContract
+      ? [
+          {
+            id: "contract",
+            title: "合约交付",
+            detail: `第 ${game.activeContract.deadlineMonth} 月截止，已交付 ${game.activeContract.albumsDelivered}/${game.activeContract.albumsRequired} 张`,
+          },
+        ]
+      : []),
     ...(game.financialCrisis.active
       ? [
           {
@@ -1291,55 +1449,34 @@ function MonthRail({
         </div>
       </Panel>
 
-      {(opportunityCount > 0 || game.activeContract) && (
-        <Panel title="本月机会" eyebrow="机会台" variant="inset">
-          <div className="ws-opportunity-list">
-            {game.month.performanceInvitations.length > 0 && (
-              <div>
-                <MicrophoneStageIcon size={17} weight="duotone" />
-                <span>
-                  <strong>
-                    {game.month.performanceInvitations.length} 个演出邀请
-                  </strong>
-                  <small>前往“演出”查看风险与报酬</small>
-                </span>
-              </div>
-            )}
-            {game.month.commercialOffers.length > 0 && (
-              <div>
-                <ReceiptIcon size={17} weight="duotone" />
-                <span>
-                  <strong>
-                    {game.month.commercialOffers.length} 个商业合作
-                  </strong>
-                  <small>前往“经营”接受或婉拒</small>
-                </span>
-              </div>
-            )}
-            {game.month.contractOffers.length > 0 && (
-              <div>
-                <VinylRecordIcon size={17} weight="duotone" />
-                <span>
-                  <strong>{game.month.contractOffers.length} 个厂牌邀约</strong>
-                  <small>签约前确认期限与发行义务</small>
-                </span>
-              </div>
-            )}
-            {game.activeContract && (
-              <div>
-                <ClockCountdownIcon size={17} weight="duotone" />
-                <span>
-                  <strong>合约截止第 {game.activeContract.deadlineMonth} 月</strong>
-                  <small>
-                    已交付 {game.activeContract.albumsDelivered}/
-                    {game.activeContract.albumsRequired} 张专辑
-                  </small>
-                </span>
-              </div>
-            )}
-          </div>
-        </Panel>
-      )}
+      <section className="ws-month-shortcuts" aria-label="月度消息">
+        <button type="button" onClick={onOpenOpportunities}>
+          <span className="ws-month-shortcuts__icon" aria-hidden="true">
+            <MicrophoneStageIcon size={19} weight="duotone" />
+          </span>
+          <span>
+            <small>机会台</small>
+            <strong>本月机会</strong>
+          </span>
+          <StatusBadge tone={opportunityCount > 0 ? "accent" : "neutral"}>
+            {opportunityCount} 条
+          </StatusBadge>
+        </button>
+        <button type="button" onClick={onOpenDynamics}>
+          <span className="ws-month-shortcuts__icon" aria-hidden="true">
+            <ListChecksIcon size={19} weight="duotone" />
+          </span>
+          <span>
+            <small>即时反馈</small>
+            <strong>本月动态</strong>
+          </span>
+          <StatusBadge
+            tone={game.month.feedback.length > 0 ? "info" : "neutral"}
+          >
+            {game.month.feedback.length} 条
+          </StatusBadge>
+        </button>
+      </section>
 
       {crises.length > 0 && (
         <Panel title="限期处理" eyebrow="危机" variant="inset">
@@ -1356,64 +1493,6 @@ function MonthRail({
           </div>
         </Panel>
       )}
-
-      <section className="ws-dynamics" aria-labelledby="ws-dynamics-title">
-        <header>
-          <div>
-            <p className="ws-section-kicker">即时反馈</p>
-            <h2 id="ws-dynamics-title">本月动态</h2>
-          </div>
-          <span>{game.month.feedback.length} 条</span>
-        </header>
-
-        {lastError && (
-          <Feedback
-            tone="danger"
-            role="alert"
-            title="行动未完成"
-            description={lastError}
-          />
-        )}
-
-        {lastMonthSummary && game.month.feedback.length === 0 && (
-          <Feedback
-            tone="info"
-            title={`第 ${lastMonthSummary.completedMonth} 个月已结算`}
-            description={[
-              `扣除运营费 ${formatCurrency(lastMonthSummary.operatingCost)}，月末余额 ${formatCurrency(lastMonthSummary.fundsAfterSettlement)}。`,
-              lastMonthSummary.contractMessage,
-              lastMonthSummary.newVenueLevel
-                ? `永久解锁 ${lastMonthSummary.newVenueLevel} 级场地。`
-                : null,
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          />
-        )}
-
-        {lastFeedback ? (
-          <FeedbackCard feedback={lastFeedback} game={game} />
-        ) : game.month.feedback.length === 0 ? (
-          <div className="ws-dynamics__empty">
-            <ListChecksIcon size={28} weight="duotone" />
-            <p>这个月还没有执行行动。</p>
-          </div>
-        ) : null}
-
-        {game.month.feedback.length > 1 && (
-          <div className="ws-mini-log">
-            {[...game.month.feedback]
-              .slice(0, -1)
-              .reverse()
-              .map((feedback, index) => (
-                <div key={`${feedback.actionId}-${index}`}>
-                  <span>{feedback.title}</span>
-                  <small>消耗 {feedback.actionPointsSpent} AP</small>
-                </div>
-              ))}
-          </div>
-        )}
-      </section>
 
       <div className="ws-month-rail__footer">
         <div>
@@ -2268,7 +2347,6 @@ export function Workstation({
   onReturnHome,
 }: WorkstationProps = {}) {
   const game = useGameStore((state) => state.game);
-  const lastFeedback = useGameStore((state) => state.lastFeedback);
   const lastMonthSummary = useGameStore((state) => state.lastMonthSummary);
   const lastError = useGameStore((state) => state.lastError);
   const performAction = useGameStore((state) => state.performAction);
@@ -2297,6 +2375,7 @@ export function Workstation({
   const [feedbackStatus, setFeedbackStatus] =
     useState<GameFeedbackStatus>(INITIAL_GAME_FEEDBACK_STATUS);
   const [careerMessage, setCareerMessage] = useState<string | null>(null);
+  const [actionResult, setActionResult] = useState<ActionFeedback | null>(null);
   const [inlineTrainingError, setInlineTrainingError] = useState<string | null>(
     null,
   );
@@ -2321,22 +2400,20 @@ export function Workstation({
   const player = selectPlayer(game);
   const teammates = selectTeammates(game);
 
-  function runAction(
-    command: ActionCommand,
-    closeAfter = true,
-    showTrainingError = false,
-  ) {
+  function runAction(command: ActionCommand, showTrainingError = false) {
     const result = performAction(command);
     if (result?.ok) {
       setInlineTrainingError(null);
-      if (closeAfter) {
-        setDialog(null);
-      }
+      setCareerMessage(null);
+      setActionResult(result.feedback);
+      setDialog("actionResult");
       return;
     }
 
     if (showTrainingError) {
       setInlineTrainingError(result?.error.message ?? "训练未能完成，请稍后重试。");
+    } else {
+      setDialog("dynamics");
     }
   }
 
@@ -2398,11 +2475,13 @@ export function Workstation({
       setCareerMessage("当前没有可操作的游戏状态。");
       return;
     }
-    setCareerMessage(
-      result.ok
-        ? `${plan.title ?? `${plan.venueLevel} 级场地演出`}已经完成结算。`
-        : result.error.message,
-    );
+    if (result.ok) {
+      setCareerMessage(null);
+      setActionResult(result.feedback);
+      setDialog("actionResult");
+      return;
+    }
+    setCareerMessage(result.error.message);
   }
 
   function handleOpenRules() {
@@ -2608,9 +2687,8 @@ export function Workstation({
 
         <MonthRail
           game={game}
-          lastFeedback={lastFeedback}
-          lastError={lastError}
-          lastMonthSummary={lastMonthSummary}
+          onOpenOpportunities={() => setDialog("opportunities")}
+          onOpenDynamics={() => setDialog("dynamics")}
           onEndMonth={() => setDialog("endMonth")}
         />
       </div>
@@ -2618,6 +2696,31 @@ export function Workstation({
       {dialog === "rules" && <RulesDialog onClose={() => setDialog(null)} />}
       {dialog === "history" && (
         <HistoryDialog game={game} onClose={() => setDialog(null)} />
+      )}
+      {dialog === "opportunities" && (
+        <MonthOpportunityDialog
+          game={game}
+          open
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog === "dynamics" && (
+        <MonthDynamicsDialog
+          game={game}
+          lastError={lastError}
+          lastMonthSummary={lastMonthSummary}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog === "actionResult" && actionResult && (
+        <ActionResultDialog
+          feedback={actionResult}
+          game={game}
+          onContinue={() => {
+            setActionResult(null);
+            setDialog(null);
+          }}
+        />
       )}
       {dialog === "settings" && (
         <SettingsDialog
@@ -2651,7 +2754,6 @@ export function Workstation({
             runAction(
               { type: "personalTraining", stat: trainingStat },
               true,
-              true,
             )
           }
           error={inlineTrainingError}
@@ -2677,7 +2779,6 @@ export function Workstation({
                 memberId: trainingMemberId,
                 stat: trainingStat,
               },
-              true,
               true,
             )
           }

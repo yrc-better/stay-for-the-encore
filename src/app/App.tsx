@@ -1,9 +1,13 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useState } from "react";
 import { EVENTS } from "../data";
 import type { EventContent } from "../data/types";
 import { useGameStore } from "../store";
 import { HomeScreen } from "./HomeScreen";
 import { MonthEventDialog } from "./MonthEventDialog";
+import {
+  countMonthOpportunities,
+  MonthOpportunityDialog,
+} from "./MonthOpportunityDialog";
 import { RulesDialog } from "./RulesDialog";
 import { selectBandAttributes } from "../domain";
 import "./app.css";
@@ -33,6 +37,9 @@ export function App() {
   const loadSavedGame = useGameStore((state) => state.loadSavedGame);
   const startNewGame = useGameStore((state) => state.startNewGame);
   const prepareEvent = useGameStore((state) => state.prepareEvent);
+  const acknowledgeOpportunities = useGameStore(
+    (state) => state.acknowledgeOpportunities,
+  );
   const lastError = useGameStore((state) => state.lastError);
   const clearSavedGame = useGameStore((state) => state.clearSavedGame);
   const clearCurrentGame = useGameStore((state) => state.clearCurrentGame);
@@ -40,6 +47,7 @@ export function App() {
   const importSave = useGameStore((state) => state.importSave);
   const [view, setView] = useState<AppView>("home");
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [eventPresentationOpen, setEventPresentationOpen] = useState(false);
 
   useEffect(() => {
     if (!hydrated) {
@@ -136,6 +144,12 @@ export function App() {
     view,
   ]);
 
+  useLayoutEffect(() => {
+    if (view === "workstation" && game?.pendingEvent) {
+      setEventPresentationOpen(true);
+    }
+  }, [game?.pendingEvent, view]);
+
   if (view === "opening") {
     return (
       <Suspense fallback={<LoadingView label="正在准备组队资料" />}>
@@ -158,7 +172,24 @@ export function App() {
           onOpenRules={() => setRulesOpen(true)}
           onReturnHome={() => setView("home")}
         />
-        <MonthEventDialog game={game} />
+        <MonthEventDialog
+          game={game}
+          onPresentationComplete={() => setEventPresentationOpen(false)}
+        />
+        <MonthOpportunityDialog
+          game={game}
+          open={
+            game.month.opportunitiesPrepared &&
+            !game.month.opportunitiesAcknowledged &&
+            countMonthOpportunities(game) > 0 &&
+            game.pendingEvent === null &&
+            !eventPresentationOpen
+          }
+          required
+          onClose={() => {
+            acknowledgeOpportunities();
+          }}
+        />
         <RulesDialog open={rulesOpen} onClose={() => setRulesOpen(false)} />
       </Suspense>
     );

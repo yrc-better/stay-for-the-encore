@@ -17,6 +17,7 @@ import { useGameStore } from "../store";
 
 interface MonthEventDialogProps {
   game: GameState;
+  onPresentationComplete?: () => void;
 }
 
 function outcomeTone(tone: EventOutcome["tone"]) {
@@ -67,7 +68,10 @@ function eventIcon(event: EventContent) {
   return <SparkleIcon size={22} weight="duotone" aria-hidden="true" />;
 }
 
-export function MonthEventDialog({ game }: MonthEventDialogProps) {
+export function MonthEventDialog({
+  game,
+  onPresentationComplete,
+}: MonthEventDialogProps) {
   const resolveEvent = useGameStore((state) => state.resolveEvent);
   const [resolvedOutcome, setResolvedOutcome] = useState<EventOutcome | null>(
     null,
@@ -127,6 +131,7 @@ export function MonthEventDialog({ game }: MonthEventDialogProps) {
             onClick={() => {
               setResolvedOutcome(null);
               setResolvedEvent(null);
+              onPresentationComplete?.();
             }}
           >
             继续本月

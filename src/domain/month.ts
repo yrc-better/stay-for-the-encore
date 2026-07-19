@@ -227,6 +227,7 @@ export function advanceMonth(state: GameState): MonthAdvanceResult {
       feedback: [],
       eventPrepared: false,
       opportunitiesPrepared: false,
+      opportunitiesAcknowledged: false,
       performanceInvitations: [],
       commercialOffers: [],
       contractOffers: [],

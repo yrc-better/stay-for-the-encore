@@ -186,6 +186,26 @@ describe("本地存档 v2", () => {
     expect(loadGame(storage)).toEqual({ status: "loaded", state });
   });
 
+  it("载入缺少机会确认字段的既有 v2 存档时补齐默认值", () => {
+    const storage = new MemoryStorage();
+    const state = jsonClone(createState("existing-v2"));
+    const month = state.month as Record<string, unknown>;
+    delete month.opportunitiesAcknowledged;
+    storage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        saveVersion: 2,
+        savedAt: "2026-07-16T00:00:00.000Z",
+        state,
+      }),
+    );
+
+    const result = loadGame(storage);
+    expect(result.status).toBe("loaded");
+    if (result.status !== "loaded") return;
+    expect(result.state.month.opportunitiesAcknowledged).toBe(false);
+  });
+
   it("拒绝损坏、未知版本和伪装成 v2 的裸状态", () => {
     const corrupted = new MemoryStorage();
     corrupted.setItem(SAVE_KEY, '{"saveVersion":2,"savedAt":"bad","state":{}}');
@@ -221,6 +241,7 @@ describe("本地存档 v2", () => {
     expect(result.state.month).toMatchObject({
       eventPrepared: false,
       opportunitiesPrepared: false,
+      opportunitiesAcknowledged: false,
       performanceInvitations: [],
       commercialOffers: [],
       contractOffers: [],

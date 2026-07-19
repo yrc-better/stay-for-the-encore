@@ -222,6 +222,28 @@ describe("乐队领域规则", () => {
     });
   });
 
+  it("主角已经精疲力尽时，兼职负面剧情与实际扣款保持一致", () => {
+    const initial = createInitialGameState(
+      newGameInput({ seed: 42, gameId: "exhausted-part-time" }),
+    );
+    initial.members[0].status = "awful";
+
+    const result = executeAction(initial, { type: "partTime" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.feedback.extra.kind).toBe("negative");
+    expect(result.feedback.extra.message).toContain("拿出 ¥500");
+    expect(result.feedback.extra.message).not.toContain("状态额外下降");
+    expect(result.state.band.funds).toBe(12_500);
+    expect(result.feedback.effects).toContainEqual({
+      target: "band",
+      label: "funds",
+      amount: -500,
+      unit: "currency",
+    });
+  });
+
   it("同级自主演出比受邀演出承担额外难度惩罚", () => {
     const invitedInitial = createInitialGameState(
       newGameInput({ seed: 42, gameId: "invited-performance" }),

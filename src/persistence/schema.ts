@@ -301,6 +301,7 @@ const gameStateObjectSchema = z
         feedback: z.array(actionFeedbackSchema),
         eventPrepared: z.boolean(),
         opportunitiesPrepared: z.boolean(),
+        opportunitiesAcknowledged: z.boolean().default(false),
         performanceInvitations: z.array(performanceInvitationSchema),
         commercialOffers: z.array(commercialOfferSchema),
         contractOffers: z.array(contractOfferSchema),
@@ -391,4 +392,3 @@ export type SaveEnvelope = z.infer<typeof saveEnvelopeSchema>;
 export function parseGameState(input: unknown): GameState {
   return gameStateSchema.parse(input) as GameState;
 }
-
