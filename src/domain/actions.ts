@@ -19,22 +19,23 @@ import {
 } from "./formulas";
 import { nextRandom, randomInteger } from "./rng";
 import { selectAbsoluteMonth, selectBandAttributes, selectPlayer } from "./selectors";
-import type {
-  ActionCommand,
-  ActionExecution,
-  ActionExtraKind,
-  ActionExtraResult,
-  ActionFeedback,
-  ActionId,
-  AlbumState,
-  DomainFailure,
-  EffectRecord,
-  GameState,
-  Member,
-  MemberStatKey,
-  PerformancePlan,
-  PerformanceRating,
-  ReleasedAlbum,
+import {
+  MEMBER_STATUSES,
+  type ActionCommand,
+  type ActionExecution,
+  type ActionExtraKind,
+  type ActionExtraResult,
+  type ActionFeedback,
+  type ActionId,
+  type AlbumState,
+  type DomainFailure,
+  type EffectRecord,
+  type GameState,
+  type Member,
+  type MemberStatKey,
+  type PerformancePlan,
+  type PerformanceRating,
+  type ReleasedAlbum,
 } from "./types";
 
 const ACTION_TITLES: Readonly<Record<ActionId, string>> = {
@@ -299,10 +300,12 @@ function changeStatus(
   const before = member.status;
   member.status = shiftStatus(member.status, recoveryLevels);
   if (member.status !== before) {
+    const actualLevels =
+      MEMBER_STATUSES.indexOf(before) - MEMBER_STATUSES.indexOf(member.status);
     effects.push({
       target: member.id,
       label: "status",
-      amount: recoveryLevels,
+      amount: actualLevels,
       unit: "level",
     });
   }

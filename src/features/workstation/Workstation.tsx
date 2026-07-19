@@ -319,6 +319,72 @@ function effectValue(effect: EffectRecord): string {
   return `${sign}${effect.amount}`;
 }
 
+interface PresentedEffect {
+  key: string;
+  label: string;
+  value: string;
+  amount: number;
+}
+
+function presentFeedbackEffects(
+  effects: readonly EffectRecord[],
+  game: GameState,
+): PresentedEffect[] {
+  const memberIds = new Set(game.members.map((member) => member.id));
+  const allStatusEffects = effects.filter((effect) => effect.label === "status");
+  const memberStatusEffects = effects
+    .map((effect, index) => ({ effect, index }))
+    .filter(
+      ({ effect }) =>
+        effect.label === "status" && memberIds.has(effect.target),
+    );
+  const firstStatusEffect = memberStatusEffects[0];
+  const canGroupAllMembers =
+    game.members.length > 1 &&
+    memberIds.size === game.members.length &&
+    allStatusEffects.length === game.members.length &&
+    memberStatusEffects.length === game.members.length &&
+    firstStatusEffect !== undefined &&
+    firstStatusEffect.effect.unit === "level" &&
+    firstStatusEffect.effect.amount !== 0 &&
+    new Set(memberStatusEffects.map(({ effect }) => effect.target)).size ===
+      game.members.length &&
+    memberStatusEffects.every(
+      ({ effect }) =>
+        effect.amount === firstStatusEffect.effect.amount &&
+        effect.unit === firstStatusEffect.effect.unit,
+    );
+
+  return effects.flatMap((effect, index) => {
+    if (
+      canGroupAllMembers &&
+      effect.label === "status" &&
+      memberIds.has(effect.target)
+    ) {
+      if (index !== firstStatusEffect.index) {
+        return [];
+      }
+      return [
+        {
+          key: `all-members-status-${index}`,
+          label: "乐队全员 状态",
+          value: effectValue(effect),
+          amount: effect.amount,
+        },
+      ];
+    }
+
+    return [
+      {
+        key: `${effect.target}-${effect.label}-${index}`,
+        label: effectLabel(effect, game),
+        value: effectValue(effect),
+        amount: effect.amount,
+      },
+    ];
+  });
+}
+
 function actionCostLabel(actionId: ActionId): string {
   if (actionId === "promotion" || actionId === "teamBuilding") {
     return "1 AP + ¥1,000";
@@ -1219,14 +1285,16 @@ function FeedbackCard({
   feedback: ActionFeedback;
   game: GameState;
 }) {
+  const presentedEffects = presentFeedbackEffects(feedback.effects, game);
+
   return (
     <Feedback
       tone={feedbackTone(feedback)}
       title={feedback.title}
       description={feedback.messages.join(" ")}
-      changes={feedback.effects.map((effect) => ({
-        label: effectLabel(effect, game),
-        value: effectValue(effect),
+      changes={presentedEffects.map((effect) => ({
+        label: effect.label,
+        value: effect.value,
         direction:
           effect.amount > 0 ? "up" : effect.amount < 0 ? "down" : "neutral",
       }))}
@@ -1244,6 +1312,7 @@ function ActionResultDialog({
   onContinue: () => void;
 }) {
   const changesTitleId = useId();
+  const presentedEffects = presentFeedbackEffects(feedback.effects, game);
 
   return (
     <Dialog
@@ -1281,13 +1350,13 @@ function ActionResultDialog({
         >
           <div>
             <h3 id={changesTitleId}>状态变化</h3>
-            <span>{feedback.effects.length} 项</span>
+            <span>{presentedEffects.length} 项</span>
           </div>
-          {feedback.effects.length > 0 ? (
+          {presentedEffects.length > 0 ? (
             <ul>
-              {feedback.effects.map((effect, index) => (
+              {presentedEffects.map((effect) => (
                 <li
-                  key={`${effect.target}-${effect.label}-${index}`}
+                  key={effect.key}
                   data-direction={
                     effect.amount > 0
                       ? "up"
@@ -1296,8 +1365,8 @@ function ActionResultDialog({
                         : "neutral"
                   }
                 >
-                  <span>{effectLabel(effect, game)}</span>
-                  <strong>{effectValue(effect)}</strong>
+                  <span>{effect.label}</span>
+                  <strong>{effect.value}</strong>
                 </li>
               ))}
             </ul>

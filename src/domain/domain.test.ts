@@ -244,6 +244,25 @@ describe("乐队领域规则", () => {
     });
   });
 
+  it("状态接近边界时，反馈记录裁剪后的实际变化级数", () => {
+    const initial = createInitialGameState(
+      newGameInput({ seed: 0, gameId: "actual-status-shift" }),
+    );
+    initial.members[0].status = "good";
+
+    const result = executeAction(initial, { type: "rest" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.state.members[0].status).toBe("excellent");
+    expect(result.feedback.effects).toContainEqual({
+      target: result.state.members[0].id,
+      label: "status",
+      amount: 1,
+      unit: "level",
+    });
+  });
+
   it("同级自主演出比受邀演出承担额外难度惩罚", () => {
     const invitedInitial = createInitialGameState(
       newGameInput({ seed: 42, gameId: "invited-performance" }),

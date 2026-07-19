@@ -54,7 +54,8 @@ describe("后台工作站", () => {
     const resultDialog = screen.getByRole("dialog", { name: "兼职" });
     expect(resultDialog).toHaveTextContent("兼职收入存入乐队公共账户");
     expect(resultDialog).toHaveTextContent("资金+¥3,000");
-    expect(resultDialog).toHaveTextContent("状态-1级");
+    expect(resultDialog).toHaveTextContent("林遥 状态-1级");
+    expect(resultDialog).not.toHaveTextContent("乐队全员 状态");
     expect(useGameStore.getState().game?.band.funds).toBe(13_000);
     expect(useGameStore.getState().game?.month.actionPointsRemaining).toBe(2);
     await user.click(
@@ -215,11 +216,71 @@ describe("后台工作站", () => {
     await user.click(performanceButton);
 
     const resultDialog = screen.getByRole("dialog", { name: "演出" });
+    const changes = within(resultDialog).getByRole("list");
     expect(resultDialog).toHaveTextContent(/小型.*演出/);
     expect(resultDialog).toHaveTextContent("资金");
-    expect(within(resultDialog).getByRole("list").children.length).toBeGreaterThan(
-      6,
+    expect(within(changes).getByText("乐队全员 状态")).toBeInTheDocument();
+    expect(within(changes).getByText("-1级")).toBeInTheDocument();
+    expect(within(changes).queryByText("林遥 状态")).not.toBeInTheDocument();
+    expect(changes.children).toHaveLength(
+      (useGameStore.getState().lastFeedback?.effects.length ?? 0) - 4,
     );
+
+    await user.click(
+      within(resultDialog).getByRole("button", { name: "继续本月" }),
+    );
+    await user.click(screen.getByRole("button", { name: /本月动态/ }));
+    const dynamicsDialog = screen.getByRole("dialog", { name: "本月动态" });
+    expect(
+      within(dynamicsDialog).getByText("乐队全员 状态"),
+    ).toBeInTheDocument();
+    expect(
+      within(dynamicsDialog).queryByText("林遥 状态"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("乐队全员统一恢复状态时合并为一条正向变化", async () => {
+    const user = userEvent.setup();
+    render(<Workstation />);
+
+    const teamBuildingCard = screen.getByRole("heading", {
+      name: "团建",
+    }).closest("article");
+    expect(teamBuildingCard).not.toBeNull();
+    await user.click(
+      within(teamBuildingCard as HTMLElement).getByRole("button", {
+        name: "执行",
+      }),
+    );
+
+    const resultDialog = screen.getByRole("dialog", { name: "团建" });
+    const changes = within(resultDialog).getByRole("list");
+    expect(within(changes).getByText("乐队全员 状态")).toBeInTheDocument();
+    expect(within(changes).getByText("+1级")).toBeInTheDocument();
+    expect(within(changes).queryByText("林遥 状态")).not.toBeInTheDocument();
+  });
+
+  it("成员触及状态边界时保留逐人变化，不误报乐队全员", async () => {
+    const user = userEvent.setup();
+    const game = createTestGame();
+    game.members[0].status = "excellent";
+    useGameStore.setState({ game });
+    render(<Workstation />);
+
+    const teamBuildingCard = screen.getByRole("heading", {
+      name: "团建",
+    }).closest("article");
+    await user.click(
+      within(teamBuildingCard as HTMLElement).getByRole("button", {
+        name: "执行",
+      }),
+    );
+
+    const resultDialog = screen.getByRole("dialog", { name: "团建" });
+    const changes = within(resultDialog).getByRole("list");
+    expect(within(changes).queryByText("乐队全员 状态")).not.toBeInTheDocument();
+    expect(within(changes).queryByText("林遥 状态")).not.toBeInTheDocument();
+    expect(within(changes).getAllByText(/状态$/)).toHaveLength(4);
   });
 
   it("从任意工作页保存后都会显示全局存档提示", async () => {
